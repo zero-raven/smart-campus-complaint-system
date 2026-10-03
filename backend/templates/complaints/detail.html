@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Complaint {{ complaint_id }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <div class="page-title" id="detail-title">Complaint</div>
+    <div class="text-muted small" id="detail-ticket"></div>
+  </div>
+  <a class="btn btn-outline-secondary btn-sm" href="/complaints">Back to list</a>
+</div>
+
+<div id="complaint-detail"><p class="text-muted">Loading&hellip;</p></div>
+
+<div class="card mt-3">
+  <div class="card-header">Photos</div>
+  <div class="card-body">
+    <div class="row g-3" id="attachments-grid"></div>
+    <div id="attachments-empty" class="text-muted small d-none">
+      No photos were attached to this complaint.
+    </div>
+
+    <hr class="my-3">
+
+    <label class="form-label small fw-semibold" for="photo-input-detail">
+      Add a photo <span class="text-muted fw-normal">(optional, stored but not analysed)</span>
+    </label>
+    <input class="form-control form-control-sm" type="file" id="photo-input-detail"
+           accept="image/*" multiple>
+    <div class="form-text">Up to 3 photos per complaint, 5 MB each.</div>
+    <div id="attach-msg" class="mt-2"></div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header">
+    Activity
+    <span class="badge text-bg-light border ms-1" id="event-count"></span>
+  </div>
+  <div class="card-body">
+    <div id="timeline"><p class="text-muted">Loading&hellip;</p></div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header">Add a comment</div>
+  <div class="card-body">
+    <form id="comment-form" class="d-flex flex-column flex-sm-row gap-2">
+      <input class="form-control" name="body" placeholder="Write a comment&hellip;" required>
+      <button class="btn btn-secondary">Post</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}<script src="/static/js/app.js"></script>{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-title">Analytical dashboard</div>
+<p class="text-muted small mb-3">
+  Aggregated from PostgreSQL, with activity volume from MongoDB.
+</p>
+
+<div class="row g-2 g-md-3 mb-3" id="kpi-cards">
+  <div class="col-12 text-muted">Loading&hellip;</div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">Complaints by category</div>
+      <div class="card-body">
+        <div class="chart-wrap"><canvas id="chart-category"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">Complaints by status</div>
+      <div class="card-body">
+        <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">Complaints by priority</div>
+      <div class="card-body">
+        <div class="chart-wrap"><canvas id="chart-priority"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">Load by department</div>
+      <div class="card-body">
+        <div class="chart-wrap"><canvas id="chart-department"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">Hybrid storage</div>
+      <div class="card-body">
+        <div class="row g-3" id="hybrid-cards">
+          <div class="col-12 text-muted small">Loading&hellip;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="/static/js/charts.js"></script>
+{% endblock %}

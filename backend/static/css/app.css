@@ -1,0 +1,268 @@
+/* Smart Campus Complaint Management System
+ *
+ * Mobile-first: base styles target small screens and progressively enhance for
+ * larger viewports. Every rule below exists because a desktop-only layout broke
+ * on a phone - horizontal overflow, unreadable tables, cramped charts.
+ */
+
+:root {
+  --scms-radius: 10px;
+  --scms-border: #e3e6ea;
+}
+
+/* ---------------------------------------------------------------- layout */
+
+/* Sticky footer: main grows to push the footer down on short pages. */
+body {
+  background: #f6f7f9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1 0 auto;
+  /* Prevents a wide child (table, chart canvas) forcing the whole page to
+     scroll sideways on a phone. */
+  min-width: 0;
+}
+
+/* ------------------------------------------------------------ typography */
+
+h1, h2, h3 { letter-spacing: -0.01em; }
+
+.page-title {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+@media (min-width: 768px) {
+  .page-title { font-size: 1.75rem; }
+}
+
+/* ----------------------------------------------------------------- cards */
+
+.card {
+  border: 1px solid var(--scms-border);
+  border-radius: var(--scms-radius);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.card-header {
+  background: #fff;
+  font-weight: 600;
+  border-bottom: 1px solid var(--scms-border);
+}
+
+/* ---------------------------------------------------------------- tables */
+
+/* Below the md breakpoint a wide data table becomes a stacked card list.
+   Each <tr> is a card; each <td> is labelled by its data-label attribute,
+   which the templates supply. */
+.table-responsive-stack {
+  width: 100%;
+}
+
+.table-responsive-stack thead {
+  display: none;
+}
+
+.table-responsive-stack tbody,
+.table-responsive-stack tr,
+.table-responsive-stack td {
+  display: block;
+  width: 100%;
+}
+
+.table-responsive-stack tr {
+  background: #fff;
+  border: 1px solid var(--scms-border);
+  border-radius: var(--scms-radius);
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.25rem;
+}
+
+.table-responsive-stack td {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.4rem 0.75rem;
+  border: 0;
+  text-align: right;
+  word-break: break-word;
+}
+
+.table-responsive-stack td::before {
+  content: attr(data-label);
+  font-weight: 600;
+  color: #6c757d;
+  text-align: left;
+  flex: 0 0 auto;
+  font-size: 0.85rem;
+}
+
+@media (min-width: 768px) {
+  .table-responsive-stack thead { display: table-header-group; }
+  .table-responsive-stack,
+  .table-responsive-stack tbody,
+  .table-responsive-stack tr,
+  .table-responsive-stack td {
+    display: revert;
+  }
+  .table-responsive-stack tr {
+    background: none;
+    border: 0;
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+  }
+  .table-responsive-stack td {
+    display: table-cell;
+    text-align: left;
+    padding: 0.5rem;
+    word-break: normal;
+  }
+  .table-responsive-stack td::before { content: none; }
+}
+
+/* --------------------------------------------------------------- widgets */
+
+.confidence-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: #e9ecef;
+  overflow: hidden;
+}
+
+.confidence-bar > span {
+  display: block;
+  height: 100%;
+  background: #0d6efd;
+}
+
+.timeline-item {
+  border-left: 2px solid var(--scms-border);
+  padding-left: 0.9rem;
+}
+
+.timeline-item:last-child { border-left-color: transparent; }
+
+/* -------------------------------------------------------------- dashboard */
+
+/* A fixed-height canvas overflows a phone viewport; cap it and let Chart.js
+   resize inside a flexible parent. */
+.chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 260px;
+}
+
+@media (min-width: 768px) {
+  .chart-wrap { height: 320px; }
+}
+
+.kpi-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+@media (min-width: 768px) {
+  .kpi-value { font-size: 2rem; }
+}
+
+.kpi-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+}
+
+/* ------------------------------------------------------------ attachments */
+
+.attachment-thumb {
+  width: 100%;
+  max-width: 160px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--scms-border);
+  background: #f1f3f5;
+}
+
+.dropzone {
+  border: 2px dashed #adb5bd;
+  border-radius: var(--scms-radius);
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.dropzone:hover,
+.dropzone.is-dragover {
+  border-color: #0d6efd;
+  background: #f0f6ff;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.preview-item {
+  position: relative;
+  aspect-ratio: 1 / 1;
+}
+
+.preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--scms-border);
+}
+
+.preview-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 0.8rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------------ misc */
+
+/* Touch targets: 44px is the accepted minimum for comfortable tapping. */
+.btn {
+  min-height: 40px;
+}
+
+@media (pointer: coarse) {
+  .btn { min-height: 44px; }
+}
+
+.form-control,
+.form-select {
+  min-height: 42px;
+}
+
+.badge { font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

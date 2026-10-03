@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Complaints · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-title">Complaints</div>
+<p class="text-muted small mb-3" id="list-subtitle">Loading&hellip;</p>
+
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex flex-column flex-sm-row gap-2 mb-3">
+      <input class="form-control" id="search" placeholder="Search subject or description"
+             autocomplete="off">
+      <select class="form-select" id="filter-status" style="max-width: 100%;">
+        <option value="">All statuses</option>
+      </select>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 table-responsive-stack">
+        <thead>
+          <tr>
+            <th scope="col">Ticket</th>
+            <th scope="col">Subject</th>
+            <th scope="col">Status</th>
+            <th scope="col">Priority</th>
+            <th scope="col">Department</th>
+            <th scope="col">Raised</th>
+          </tr>
+        </thead>
+        <tbody id="complaints-body">
+          <tr><td colspan="6" class="text-muted">Loading&hellip;</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}<script src="/static/js/app.js"></script>{% endblock %}

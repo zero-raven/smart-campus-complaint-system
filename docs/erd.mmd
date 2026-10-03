@@ -1,0 +1,317 @@
+---
+title: Smart Campus Complaint Management System - Relational Schema (3NF)
+---
+erDiagram
+
+    %% ============ IDENTITY ============
+    app_user {
+        serial user_id PK
+        varchar username UK
+        varchar email UK
+        varchar password_hash
+        varchar full_name
+        varchar role "STUDENT|STAFF|ADMIN|VIEWER"
+        int dept_id FK
+        varchar usn UK
+        smallint semester
+        varchar section_name
+        varchar hostel_name
+        varchar phone
+        boolean is_active
+        timestamptz last_login_at
+        timestamptz created_at
+    }
+
+    staff {
+        serial staff_id PK
+        int user_id FK,UK
+        int dept_id FK
+        varchar designation
+        smallint max_open_complaints
+        boolean is_active
+        date joined_on
+    }
+
+    department {
+        serial dept_id PK
+        varchar dept_code UK
+        varchar dept_name
+        varchar office_email UK
+        varchar office_phone
+        varchar campus_zone
+        boolean is_active
+        timestamptz created_at
+    }
+
+    %% ============ REFERENCE DATA ============
+    category {
+        serial category_id PK
+        varchar category_code UK
+        varchar category_name
+        text description
+        varchar icon
+        boolean is_active
+    }
+
+    priority {
+        serial priority_id PK
+        varchar priority_code UK
+        varchar priority_name
+        smallint priority_rank UK
+        int sla_hours
+        text description
+    }
+
+    complaint_status {
+        serial status_id PK
+        varchar status_code UK
+        varchar status_name
+        text description
+        boolean is_terminal
+        smallint sort_order
+    }
+
+    allowed_transition {
+        int status_id PK,FK
+        int next_status_id PK,FK
+        varchar required_role
+        boolean requires_remark
+    }
+
+    %% ============ NLP CONFIGURATION ============
+    triage_rule {
+        serial rule_id PK
+        varchar rule_type
+        int category_id FK
+        int dept_id FK
+        varchar keyword
+        int priority_id FK
+        smallint match_weight
+        boolean is_active
+        int created_by FK
+        timestamptz created_at
+    }
+
+    ml_model {
+        serial model_id PK
+        varchar version UK
+        varchar algorithm
+        numeric accuracy
+        numeric macro_precision
+        numeric macro_recall
+        numeric macro_f1
+        int train_samples
+        int test_samples
+        int vocab_size
+        timestamptz trained_at
+        boolean is_active
+        varchar artifact_path
+    }
+
+    %% ============ CAMPUS ASSETS ============
+    campus_building {
+        serial building_id PK
+        varchar building_code UK
+        varchar building_name
+        varchar building_type
+        smallint floors
+        int dept_id FK
+        boolean is_active
+    }
+
+    campus_location {
+        serial location_id PK
+        int building_id FK
+        varchar location_type
+        smallint floor_no
+        varchar room_number
+        varchar landmark
+    }
+
+    %% ============ COMPLAINT AGGREGATE ============
+    complaint {
+        serial complaint_id PK
+        varchar ticket_no UK
+        varchar subject
+        text description
+        int location_id FK
+        varchar free_location
+        int category_id FK
+        int priority_id FK
+        int dept_id FK
+        int status_id FK
+        int reported_by FK
+        int assigned_to FK
+        int model_id FK
+        varchar channel
+        boolean is_auto_classified
+        numeric category_confidence
+        boolean is_user_overridden
+        text resolution_notes
+        timestamptz resolved_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    status_history {
+        bigserial history_id PK
+        int complaint_id FK
+        int old_status_id FK
+        int new_status_id FK
+        int changed_by FK
+        text remarks
+        timestamptz changed_at
+    }
+
+    assignment {
+        bigserial assignment_id PK
+        int complaint_id FK
+        int staff_id FK
+        int assigned_by FK
+        timestamptz assigned_at
+        timestamptz unassigned_at
+        text reason
+    }
+
+    complaint_escalation {
+        bigserial escalation_id PK
+        int complaint_id FK
+        int escalated_from FK
+        int escalated_to FK
+        int escalated_by FK
+        text reason
+        timestamptz escalated_at
+    }
+
+    attachment {
+        bigserial attachment_id PK
+        int complaint_id FK
+        varchar file_name
+        varchar content_type
+        bigint file_size
+        varchar storage_ref
+        int uploaded_by FK
+        timestamptz uploaded_at
+    }
+
+    complaint_tag {
+        serial tag_id PK
+        varchar tag_name UK
+        varchar tag_type
+        text description
+    }
+
+    complaint_tag_map {
+        int complaint_id PK,FK
+        int tag_id PK,FK
+        int tagged_by FK
+        timestamptz tagged_at
+    }
+
+    notification {
+        bigserial notification_id PK
+        int complaint_id FK
+        int user_id FK
+        varchar channel
+        varchar category
+        varchar title
+        text body
+        boolean is_read
+        timestamptz created_at
+    }
+
+    feedback {
+        bigserial feedback_id PK
+        int complaint_id FK
+        int user_id FK
+        smallint rating
+        text comment
+        boolean is_resolved_accurate
+        timestamptz submitted_at
+    }
+
+    audit_log {
+        bigserial audit_id PK
+        int actor_id FK
+        varchar action
+        varchar entity_type
+        varchar entity_id
+        text details
+        varchar ip_address
+        timestamptz occurred_at
+    }
+
+    outbox {
+        bigserial outbox_id PK
+        varchar aggregate
+        int complaint_id FK
+        varchar event_type
+        jsonb payload
+        smallint attempts
+        text last_error
+        boolean published
+        timestamptz created_at
+        timestamptz published_at
+    }
+
+    %% ============ RELATIONSHIPS ============
+
+    %% Identity
+    app_user ||--o| staff : "is a (subtype)"
+    app_user }o--|| department : "belongs to (staff/admin)"
+    department ||--o{ staff : "employs"
+    department ||--o{ app_user : "has members"
+
+    %% Reference data into the complaint
+    department ||--o{ complaint : "owns and resolves"
+    category ||--o{ complaint : "classifies"
+    priority ||--o{ complaint : "graded as"
+    complaint_status ||--o{ complaint : "currently in"
+    app_user ||--o{ complaint : "reports"
+    staff o|--o{ complaint : "is assigned"
+    ml_model ||--o{ complaint : "classified by"
+    campus_location o|--o{ complaint : "located at"
+
+    %% Campus assets
+    department o|--o{ campus_building : "maintains"
+    campus_building ||--o{ campus_location : "contains"
+
+    %% Audit and workflow children
+    complaint ||--o{ status_history : "has history"
+    complaint_status ||--o{ status_history : "old status"
+    complaint_status ||--o{ status_history : "new status"
+    app_user ||--o{ status_history : "performs"
+
+    complaint ||--o{ assignment : "assignment history"
+    staff ||--o{ assignment : "receives"
+    app_user ||--o{ assignment : "assigns"
+
+    complaint ||--o{ complaint_escalation : "escalated via"
+    department ||--o{ complaint_escalation : "escalated from"
+    department ||--o{ complaint_escalation : "escalated to"
+
+    complaint ||--o{ attachment : "has files"
+    complaint ||--o{ complaint_tag_map : "tagged via"
+    complaint_tag ||--o{ complaint_tag_map : "labels"
+    app_user ||--o{ complaint_tag_map : "tags"
+
+    complaint ||--o{ notification : "triggers"
+    app_user ||--o{ notification : "receives"
+
+    complaint ||--o{ feedback : "rated in"
+    app_user ||--o{ feedback : "submits"
+
+    app_user o|--o{ audit_log : "acts"
+
+    %% Outbox -> MongoDB event publishing
+    complaint ||--o{ outbox : "emits events"
+
+    %% Rule engine
+    category o|--o{ triage_rule : "scopes"
+    department o|--o{ triage_rule : "scopes"
+    priority o|--o{ triage_rule : "suggests"
+    app_user o|--o{ triage_rule : "created"
+
+    %% Status state machine (self-referential M:N)
+    complaint_status ||--o{ allowed_transition : "from"
+    complaint_status ||--o{ allowed_transition : "to"

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}New complaint · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-title">Register a complaint</div>
+<p class="text-muted small mb-3">
+  Describe the problem. A category, priority and department are suggested
+  automatically, and you can change any of them before submitting.
+</p>
+
+<form id="complaint-form" novalidate>
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="mb-3">
+        <label class="form-label" for="subject">Subject</label>
+        <input class="form-control" id="subject" name="subject"
+               required minlength="5" maxlength="200"
+               placeholder="Short summary, e.g. Water supply missing in Hostel A">
+        <div class="invalid-feedback">Please give a subject of at least 5 characters.</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="description">Description</label>
+        <textarea class="form-control" id="description" name="description"
+                  rows="5" required minlength="10"
+                  placeholder="What is wrong, where exactly, and since when?"></textarea>
+        <div class="form-text">
+          The classifier works best with specifics: what is broken, which block or
+          room, and how long it has been happening.
+        </div>
+        <div class="invalid-feedback">Please describe the problem in at least 10 characters.</div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-12 col-md-8">
+          <label class="form-label" for="free_location">Location</label>
+          <input class="form-control" id="free_location" name="free_location"
+                 maxlength="160" placeholder="Hostel Block A, second floor washroom">
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="channel">Channel</label>
+          <select class="form-select" id="channel" name="channel">
+            <option value="WEB">Web</option>
+            <option value="MOBILE">Mobile</option>
+            <option value="KIOSK">Campus kiosk</option>
+            <option value="EMAIL">Email</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Photos are optional. Stored in MongoDB GridFS, never processed. #}
+  <div class="card mb-3">
+    <div class="card-body">
+      <label class="form-label d-block">Photos <span class="text-muted fw-normal">(optional)</span></label>
+
+      <input type="file" id="photo-input" accept="image/*" multiple hidden>
+
+      <div class="dropzone" id="dropzone" role="button" tabindex="0"
+           aria-label="Choose photos to attach">
+        <div class="fs-1 mb-1" aria-hidden="true">&#128247;</div>
+        <div class="fw-semibold">Tap to add photos</div>
+        <div class="small text-muted">
+          Up to 3 images, 5 MB each. JPEG, PNG, WebP, GIF or HEIC.
+        </div>
+      </div>
+
+      <div class="preview-grid" id="preview-grid"></div>
+      <div id="photo-msg" class="mt-2"></div>
+    </div>
+  </div>
+
+  <div class="d-grid d-sm-flex gap-2 mb-4">
+    <button class="btn btn-primary" type="submit" id="submit-btn">Submit complaint</button>
+    <a class="btn btn-outline-secondary" href="/complaints">Cancel</a>
+  </div>
+</form>
+
+<div id="suggestion-box" class="mb-4"></div>
+<div id="complaint-msg"></div>
+{% endblock %}
+
+{% block scripts %}<script src="/static/js/classify.js"></script>{% endblock %}

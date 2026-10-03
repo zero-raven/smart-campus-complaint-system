@@ -1,0 +1,288 @@
+{
+  "version": "v1_linearsvc_calibrated_202609301148",
+  "selected_model": "LinearSVC_calibrated",
+  "selection_metric": "macro_f1",
+  "dataset": {
+    "path": "data/raw/complaints.csv",
+    "provenance": "SYNTHETIC - hand-written campus templates with perturbation; no real campus corpus exists",
+    "examples": 804,
+    "categories": 12,
+    "templates": 134,
+    "train_size": 642,
+    "test_size": 162,
+    "split_strategy": "5-fold grouped cross-validation on template id. Rows sharing a template never straddle the fold boundary, preventing the near-duplicate leakage that inflates every metric to 1.00 under a naive random row split."
+  },
+  "vectorizer_params": {
+    "lowercase": true,
+    "ngram_range": [
+      1,
+      2
+    ],
+    "min_df": 2,
+    "max_features": 5000,
+    "sublinear_tf": true,
+    "strip_accents": "unicode"
+  },
+  "vocab_size": 1257,
+  "heldout_fold_metrics": {
+    "MultinomialNB": {
+      "accuracy": 0.3457,
+      "macro_precision": 0.3926,
+      "macro_recall": 0.3565,
+      "macro_f1": 0.3417,
+      "weighted_f1": 0.3362,
+      "cv_macro_f1_mean": 0.9954,
+      "cv_macro_f1_std": 0.0061
+    },
+    "LogisticRegression": {
+      "accuracy": 0.3827,
+      "macro_precision": 0.4136,
+      "macro_recall": 0.3981,
+      "macro_f1": 0.3635,
+      "weighted_f1": 0.3561,
+      "cv_macro_f1_mean": 1.0,
+      "cv_macro_f1_std": 0.0
+    },
+    "LinearSVC_calibrated": {
+      "accuracy": 0.4259,
+      "macro_precision": 0.4491,
+      "macro_recall": 0.4398,
+      "macro_f1": 0.4202,
+      "weighted_f1": 0.4101,
+      "cv_macro_f1_mean": 1.0,
+      "cv_macro_f1_std": 0.0
+    },
+    "RandomForest": {
+      "accuracy": 0.4136,
+      "macro_precision": 0.3526,
+      "macro_recall": 0.4282,
+      "macro_f1": 0.3796,
+      "weighted_f1": 0.3642,
+      "cv_macro_f1_mean": 0.9956,
+      "cv_macro_f1_std": 0.0036
+    }
+  },
+  "out_of_fold_metrics": {
+    "MultinomialNB": {
+      "accuracy": 0.3818,
+      "macro_precision": 0.3899,
+      "macro_recall": 0.3794,
+      "macro_f1": 0.3784,
+      "weighted_f1": 0.3786
+    },
+    "LogisticRegression": {
+      "accuracy": 0.4565,
+      "macro_precision": 0.4462,
+      "macro_recall": 0.4505,
+      "macro_f1": 0.437,
+      "weighted_f1": 0.4421
+    },
+    "LinearSVC_calibrated": {
+      "accuracy": 0.4764,
+      "macro_precision": 0.4783,
+      "macro_recall": 0.4726,
+      "macro_f1": 0.4604,
+      "weighted_f1": 0.4618
+    },
+    "RandomForest": {
+      "accuracy": 0.4266,
+      "macro_precision": 0.4471,
+      "macro_recall": 0.4171,
+      "macro_f1": 0.4131,
+      "weighted_f1": 0.4213
+    }
+  },
+  "selected_metrics": {
+    "accuracy": 0.4764,
+    "macro_precision": 0.4783,
+    "macro_recall": 0.4726,
+    "macro_f1": 0.4604,
+    "weighted_f1": 0.4618
+  },
+  "per_class_report": "              precision    recall  f1-score   support\n\n       CIVIL       0.16      0.14      0.15        66\n  ELECTRICAL       0.31      0.29      0.30        72\n EXAMINATION       0.71      0.89      0.79        66\nHOUSEKEEPING       0.53      0.36      0.43        72\n     LIBRARY       0.62      0.61      0.61        66\n        MESS       0.73      0.85      0.78        66\n     NETWORK       0.36      0.25      0.30        72\n       OTHER       0.60      0.19      0.29        48\n    PLUMBING       0.45      0.51      0.48        72\n    SECURITY       0.38      0.60      0.46        72\n      SPORTS       0.50      0.53      0.51        66\n   TRANSPORT       0.39      0.45      0.42        66\n\n    accuracy                           0.48       804\n   macro avg       0.48      0.47      0.46       804\nweighted avg       0.47      0.48      0.46       804\n",
+  "confusion_matrix_labels": [
+    "CIVIL",
+    "ELECTRICAL",
+    "EXAMINATION",
+    "HOUSEKEEPING",
+    "LIBRARY",
+    "MESS",
+    "NETWORK",
+    "OTHER",
+    "PLUMBING",
+    "SECURITY",
+    "SPORTS",
+    "TRANSPORT"
+  ],
+  "confusion_matrix": [
+    [
+      9,
+      14,
+      0,
+      3,
+      0,
+      1,
+      0,
+      0,
+      8,
+      9,
+      0,
+      22
+    ],
+    [
+      13,
+      21,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      12,
+      16,
+      7,
+      0
+    ],
+    [
+      0,
+      0,
+      59,
+      0,
+      0,
+      0,
+      1,
+      6,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      2,
+      0,
+      0,
+      26,
+      0,
+      6,
+      6,
+      0,
+      17,
+      14,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      40,
+      0,
+      9,
+      0,
+      2,
+      3,
+      6,
+      6
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      56,
+      0,
+      0,
+      0,
+      2,
+      6,
+      2
+    ],
+    [
+      0,
+      14,
+      12,
+      6,
+      14,
+      3,
+      18,
+      0,
+      0,
+      4,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      12,
+      5,
+      0,
+      0,
+      2,
+      9,
+      1,
+      9,
+      7,
+      3
+    ],
+    [
+      10,
+      7,
+      0,
+      7,
+      1,
+      3,
+      0,
+      0,
+      37,
+      1,
+      5,
+      1
+    ],
+    [
+      2,
+      8,
+      0,
+      2,
+      4,
+      1,
+      1,
+      0,
+      0,
+      43,
+      4,
+      7
+    ],
+    [
+      1,
+      3,
+      0,
+      0,
+      0,
+      7,
+      10,
+      0,
+      5,
+      1,
+      35,
+      4
+    ],
+    [
+      18,
+      0,
+      0,
+      0,
+      6,
+      0,
+      0,
+      0,
+      0,
+      12,
+      0,
+      30
+    ]
+  ],
+  "trained_at": "2026-09-30T11:48:53.660899+00:00"
+}
