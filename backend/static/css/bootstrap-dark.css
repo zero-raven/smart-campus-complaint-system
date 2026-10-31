@@ -1,0 +1,98 @@
+/* Auteur — Bootstrap Dark Overrides — Professional dark theme */
+/* All endpoints uniform; text readable; forms relate to cards */
+
+/* Card surfaces — solid dark, no decorative glass */
+.card, .glass-card {
+  background-color: var(--surface-2) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-card) !important;
+  color: var(--text-primary) !important;
+}
+.card-body { padding: 1.75rem; color: var(--text-primary); }
+
+/* Form labels — visible against dark */
+.form-label, label {
+  color: var(--text-secondary) !important;
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.35rem;
+}
+
+/* Inputs — dark surface, bright border on focus */
+.form-control {
+  background-color: var(--surface-3) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-body);
+  padding: 0.6rem 1rem;
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+.form-control:focus {
+  background-color: var(--surface-2) !important;
+  border-color: var(--accent) !important;
+  color: var(--text-primary) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(46,196,182,0.15) !important;
+}
+
+/* Text muted — visible (not invisible black) */
+.text-muted, .small, .text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+/* Buttons — single gradient family across all endpoints */
+.btn-gradient, .btn-primary {
+  background-color: var(--accent) !important;
+  border: none !important;
+  color: #0f1115 !important;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  border-radius: var(--radius-md) !important;
+  padding: 0.65rem 1.5rem;
+  transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+  box-shadow: 0 4px 16px rgba(46,196,182,0.25);
+}
+.btn-gradient:hover, .btn-primary:hover, .btn-gradient:focus, .btn-primary:focus {
+  background-color: var(--accent-hover) !important;
+  color: #0f1115 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(46,196,182,0.35);
+  outline: none !important;
+}
+
+/* Secondary outline button — relates to cards */
+.btn-outline-light {
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-md) !important;
+  background: transparent !important;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+.btn-outline-light:hover {
+  background: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255,255,255,0.3) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Tables — dark headers, visible rows */
+.table-dark, .table {
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.08);
+}
+.table-dark th, th { color: var(--text-secondary); font-family: var(--font-display); font-weight: 600; letter-spacing: 0.03em; border-bottom: 2px solid rgba(255,255,255,0.1); }
+.table-dark td, td { border-top: 1px solid rgba(255,255,255,0.06); padding: 0.75rem 1rem; }
+.table-dark tbody tr:hover, .table tbody tr:hover { background-color: rgba(46,196,182,0.06); }
+
+/* Alerts — muted, not neon */
+.alert { background-color: var(--surface-3); border: 1px solid rgba(255,255,255,0.08); color: var(--text-primary); border-radius: var(--radius-md); }
+.alert-success { border-left: 4px solid var(--accent); }
+.alert-danger { border-left: 4px solid #ef476f; }
+.alert-info { border-left: 4px solid #3a86ff; }
+
+/* Navbar links — clear state */
+.nav-link { color: var(--text-secondary) !important; font-weight: 500; transition: color 160ms ease; }
+.nav-link:hover, .nav-link.active { color: var(--text-primary) !important; }

@@ -50,6 +50,9 @@ async function apiFetch(path, options = {}) {
   return data;
 }
 
+// Make apiFetch globally available for other scripts (classify.js, etc.)
+window.apiFetch = apiFetch;
+
 function formToObject(form) {
   const out = {};
   new FormData(form).forEach((value, key) => {
@@ -110,11 +113,11 @@ const statusFilter = document.getElementById("filter-status");
 function esc(value) {
   if (value === null || value === undefined) return "";
   return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    .replace(/&/g, "&")
+    .replace(/</g, "<")
+    .replace(/>/g, ">")
+    .replace(/"/g, '"')
+    .replace(/'/g, "'");
 }
 
 const STATUS_LABELS = {
@@ -201,12 +204,25 @@ async function loadComplaints() {
 if (complaintsBody) {
   // Populate the status filter from the reference data the API exposes.
   if (statusFilter) {
-    Object.entries(STATUS_LABELS).forEach(([code, label]) => {
-      const opt = document.createElement("option");
-      opt.value = code;
-      opt.textContent = label;
-      statusFilter.appendChild(opt);
-    });
+    apiFetch("/reference/statuses")
+      .then((data) => {
+        const items = data.items || [];
+        items.forEach((s) => {
+          const opt = document.createElement("option");
+          opt.value = s.status_id;
+          opt.textContent = s.status_name;
+          statusFilter.appendChild(opt);
+        });
+      })
+      .catch(() => {
+        // Fallback to hardcoded labels if API fails
+        Object.entries(STATUS_LABELS).forEach(([code, label]) => {
+          const opt = document.createElement("option");
+          opt.value = code;
+          opt.textContent = label;
+          statusFilter.appendChild(opt);
+        });
+      });
   }
 
   loadComplaints();
@@ -267,13 +283,137 @@ if (detailBox) {
   const grid = document.getElementById("attachments-grid");
   const emptyNote = document.getElementById("attachments-empty");
   const attachInput = document.getElementById("photo-input-detail");
-  const attachMsg = document.getElementById("attach-msg");
+  const attachMsg = document.getElementById("attach-msg-detail");
+  const dropzone = document.getElementById("dropzone-detail");
+  const previewGrid = document.getElementById("preview-grid-detail");
+
+  let detailSelectedFiles = [];
 
   function humanSize(bytes) {
     if (!bytes && bytes !== 0) return "";
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function renderDetailPreviews() {
+    if (!previewGrid) return;
+    previewGrid.innerHTML = "";
+    detailSelectedFiles.forEach((file, index) => {
+      const item = document.createElement("div");
+      item.className = "preview-item";
+
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      img.alt = file.name;
+      img.addEventListener("load", () => URL.revokeObjectURL(img.src));
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "preview-remove";
+      remove.innerHTML = "&times;";
+      remove.setAttribute("aria-label", `Remove ${file.name}`);
+      remove.addEventListener("click", () => {
+        detailSelectedFiles.splice(index, 1);
+        renderDetailPreviews();
+      });
+
+      item.appendChild(img);
+      item.appendChild(remove);
+      previewGrid.appendChild(item);
+    });
+
+    const remaining = 3 - detailSelectedFiles.length;
+    const hint = dropzone?.querySelector(".small");
+    if (hint) {
+      hint.textContent =
+        detailSelectedFiles.length === 0
+          ? `Up to 3 images, 5 MB each. JPEG, PNG, WebP, GIF or HEIC.`
+          : `${detailSelectedFiles.length} selected (${remaining} slot${remaining === 1 ? "" : "s"} left) · ${humanSize(
+              detailSelectedFiles.reduce((sum, f) => sum + f.size, 0)
+            )} total`;
+    }
+  }
+
+  function addDetailFiles(fileList) {
+    const incoming = Array.from(fileList || []);
+    let rejected = [];
+
+    for (const file of incoming) {
+      if (detailSelectedFiles.length >= 3) {
+        rejected.push(`${file.name} (limit is 3 photos)`);
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        rejected.push(`${file.name} (${humanSize(file.size)}, limit is 5 MB)`);
+        continue;
+      }
+      if (!file.type.startsWith("image/")) {
+        rejected.push(`${file.name} (not an image)`);
+        continue;
+      }
+      detailSelectedFiles.push(file);
+    }
+
+    renderDetailPreviews();
+
+    if (attachMsg) {
+      attachMsg.innerHTML = rejected.length
+        ? `<div class="alert alert-warning py-1 small mb-0">Not added: ${rejected.join(", ")}</div>`
+        : "";
+    }
+  }
+
+  if (dropzone) {
+    dropzone.addEventListener("click", () => attachInput.click());
+    dropzone.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        attachInput.click();
+      }
+    });
+
+    attachInput.addEventListener("change", () => {
+      addDetailFiles(attachInput.files);
+      attachInput.value = "";
+    });
+
+    ["dragenter", "dragover"].forEach((evt) =>
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.classList.add("is-dragover");
+      })
+    );
+    ["dragleave", "drop"].forEach((evt) =>
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("is-dragover");
+      })
+    );
+    dropzone.addEventListener("drop", (e) => addDetailFiles(e.dataTransfer.files));
+  }
+
+  async function uploadDetailPhotos(complaintId) {
+    if (!detailSelectedFiles.length) return { uploaded: 0, failed: 0, errors: [] };
+
+    let uploaded = 0;
+    const errors = [];
+
+    for (const file of detailSelectedFiles) {
+      const body = new FormData();
+      body.append("file", file, file.name);
+      try {
+        await apiFetch(`/complaints/${complaintId}/attachments`, {
+          method: "POST",
+          body,
+        });
+        uploaded += 1;
+      } catch (err) {
+        errors.push(`${file.name}: ${err.message}`);
+      }
+    }
+
+    return { uploaded, failed: detailSelectedFiles.length - uploaded, errors };
   }
 
   async function loadAttachments() {
@@ -312,7 +452,7 @@ if (detailBox) {
       attachInput.value = "";
       if (!files.length) return;
 
-      attachMsg.innerHTML = '<div class="alert alert-info py-1 small mb-0">Uploading&hellip;</div>';
+      if (attachMsg) attachMsg.innerHTML = '<div class="alert alert-info py-1 small mb-0">Uploading&hellip;</div>';
       let ok = 0;
       const errors = [];
 
@@ -328,9 +468,9 @@ if (detailBox) {
       }
 
       if (!errors.length) {
-        attachMsg.innerHTML = `<div class="alert alert-success py-1 small mb-0">${ok} photo(s) attached.</div>`;
+        if (attachMsg) attachMsg.innerHTML = `<div class="alert alert-success py-1 small mb-0">${ok} photo(s) attached.</div>`;
       } else {
-        attachMsg.innerHTML = `<div class="alert alert-warning py-1 small mb-0">${
+        if (attachMsg) attachMsg.innerHTML = `<div class="alert alert-warning py-1 small mb-0">${
           ok ? `${ok} attached. ` : ""
         }Failed: ${errors.join("; ")}</div>`;
       }
@@ -349,7 +489,7 @@ if (detailBox) {
       if (counter) counter.textContent = `${events.length} event${events.length === 1 ? "" : "s"}`;
 
       if (!events.length) {
-        box.innerHTML = '<p class="text-muted mb-0">No activity recorded yet.</p>';
+        box.innerHTML = '<p class="text-secondary mb-0">No activity recorded yet.</p>';
         return;
       }
       box.innerHTML = events

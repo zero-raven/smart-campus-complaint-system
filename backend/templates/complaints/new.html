@@ -2,11 +2,12 @@
 {% block title %}New complaint · {{ app_name }}{% endblock %}
 
 {% block content %}
-<div class="page-title">Register a complaint</div>
-<p class="text-muted small mb-3">
-  Describe the problem. A category, priority and department are suggested
-  automatically, and you can change any of them before submitting.
-</p>
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="page-title">Register a complaint</h1>
+    <p class="text-secondary small mb-0">Describe the problem. A category, priority and department are suggested automatically, and you can change any of them before submitting.</p>
+  </div>
+</div>
 
 <form id="complaint-form" novalidate>
   <div class="card mb-3">
@@ -71,9 +72,9 @@
     </div>
   </div>
 
-  <div class="d-grid d-sm-flex gap-2 mb-4">
+  <div class="d-flex flex-wrap gap-2 mb-4">
     <button class="btn btn-primary" type="submit" id="submit-btn">Submit complaint</button>
-    <a class="btn btn-outline-secondary" href="/complaints">Cancel</a>
+    <a class="btn btn-secondary" href="/complaints">Cancel</a>
   </div>
 </form>
 
@@ -81,4 +82,7 @@
 <div id="complaint-msg"></div>
 {% endblock %}
 
-{% block scripts %}<script src="/static/js/classify.js"></script>{% endblock %}
+{% block scripts %}
+<script src="/static/js/app.js"></script>
+<script src="/static/js/classify.js"></script>
+{% endblock %}

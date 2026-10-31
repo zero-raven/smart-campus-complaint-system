@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 class="h4 mb-1">Model registry</h2>
-<p class="text-muted small mb-3">
-  Metrics are the values actually measured during training, stored with the model
-  rather than asserted. Re-run <code>python ml/train.py</code> to retrain.
-</p>
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="page-title">Model registry</h1>
+    <p class="text-secondary small mb-0">Metrics are the values actually measured during training, stored with the model rather than asserted. Re-run <code>python ml/train.py</code> to retrain.</p>
+  </div>
+</div>
 
-<div class="card">
+<div class="card mb-3">
   <div class="card-body">
     <table class="table table-sm align-middle mb-0">
       <thead>
@@ -23,7 +24,7 @@
   </div>
 </div>
 
-<div class="card mt-4">
+<div class="card">
   <div class="card-header fw-semibold">Dataset and split methodology</div>
   <div class="card-body small">
     <p class="mb-2">
@@ -38,7 +39,7 @@
       numbers above are out-of-fold: each example was scored by a model that had
       never seen its phrasing.
     </p>
-    <p class="mb-0 text-muted">
+    <p class="mb-0 text-secondary">
       Selection metric is macro F1, not accuracy, because class imbalance makes
       accuracy reward ignoring rare categories.
     </p>
@@ -65,8 +66,8 @@ const body = document.getElementById("models-body");
       <td>${m.train_samples ?? "-"}</td>
       <td>${m.test_samples ?? "-"}</td>
       <td>${m.is_active
-        ? '<span class="badge text-bg-success">active</span>'
-        : '<span class="badge text-bg-secondary">inactive</span>'}</td>
+        ? '<span class="badge bg-success">active</span>'
+        : '<span class="badge bg-secondary">inactive</span>'}</td>
     </tr>`).join("");
   } catch (err) {
     body.innerHTML = `<tr><td colspan="9" class="text-danger">${err.message}</td></tr>`;

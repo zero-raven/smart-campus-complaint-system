@@ -4,41 +4,42 @@
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
   <div>
-    <div class="page-title" id="detail-title">Complaint</div>
-    <div class="text-muted small" id="detail-ticket"></div>
+    <h1 class="page-title">Complaint</h1>
+    <div class="text-secondary small" id="detail-ticket"></div>
   </div>
-  <a class="btn btn-outline-secondary btn-sm" href="/complaints">Back to list</a>
+  <a class="btn btn-secondary btn-sm" href="/complaints">Back to list</a>
 </div>
 
-<div id="complaint-detail"><p class="text-muted">Loading&hellip;</p></div>
+<div id="complaint-detail"><p class="text-secondary">Loading&hellip;</p></div>
 
 <div class="card mt-3">
   <div class="card-header">Photos</div>
   <div class="card-body">
-    <div class="row g-3" id="attachments-grid"></div>
-    <div id="attachments-empty" class="text-muted small d-none">
-      No photos were attached to this complaint.
+    {# Photo upload (inline) #}
+    <label class="form-label d-block mb-2">Add photos <span class="text-muted fw-normal">(optional)</span></label>
+    <input type="file" id="photo-input-detail" accept="image/*" multiple hidden>
+    <div class="dropzone mb-3" id="dropzone-detail" role="button" tabindex="0" aria-label="Choose photos to attach">
+      <div class="fs-1 mb-1" aria-hidden="true">&#128247;</div>
+      <div class="fw-semibold">Tap to add photos</div>
+      <div class="small text-muted">Up to 3 images, 5 MB each. JPEG, PNG, WebP, GIF or HEIC.</div>
     </div>
+    <div class="preview-grid" id="preview-grid-detail"></div>
+    <div id="attach-msg-detail" class="mt-2"></div>
 
+    {# Photo gallery #}
     <hr class="my-3">
-
-    <label class="form-label small fw-semibold" for="photo-input-detail">
-      Add a photo <span class="text-muted fw-normal">(optional, stored but not analysed)</span>
-    </label>
-    <input class="form-control form-control-sm" type="file" id="photo-input-detail"
-           accept="image/*" multiple>
-    <div class="form-text">Up to 3 photos per complaint, 5 MB each.</div>
-    <div id="attach-msg" class="mt-2"></div>
+    <div class="row g-3" id="attachments-grid"></div>
+    <div id="attachments-empty" class="text-secondary small d-none">No photos were attached to this complaint.</div>
   </div>
 </div>
 
 <div class="card mt-3">
-  <div class="card-header">
-    Activity
-    <span class="badge text-bg-light border ms-1" id="event-count"></span>
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Activity</span>
+    <span class="badge bg-secondary" id="event-count"></span>
   </div>
   <div class="card-body">
-    <div id="timeline"><p class="text-muted">Loading&hellip;</p></div>
+    <div id="timeline"><p class="text-secondary">Loading&hellip;</p></div>
   </div>
 </div>
 
@@ -47,7 +48,7 @@
   <div class="card-body">
     <form id="comment-form" class="d-flex flex-column flex-sm-row gap-2">
       <input class="form-control" name="body" placeholder="Write a comment&hellip;" required>
-      <button class="btn btn-secondary">Post</button>
+      <button class="btn btn-primary" type="submit">Post</button>
     </form>
   </div>
 </div>

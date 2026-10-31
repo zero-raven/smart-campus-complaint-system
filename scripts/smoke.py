@@ -206,9 +206,16 @@ def main() -> int:
               f"MongoDB events={h['mongo_events']} outbox_pending={h['outbox_pending']}")
 
     print("\n== 10. HTML pages ==")
-    for path in ("/", "/login", "/register", "/complaints", "/complaints/new", "/dashboard"):
+    public_paths = ("/", "/login", "/register")
+    protected_paths = ("/complaints", "/complaints/new", "/dashboard")
+
+    for path in public_paths:
         r = client.get(path)
         failures += not check(f"GET {path}", r.status_code == 200, str(r.status_code))
+
+    for path in protected_paths:
+        r = client.get(path, headers=student)
+        failures += not check(f"GET {path} (auth)", r.status_code == 200, str(r.status_code))
 
     print()
     if failures:

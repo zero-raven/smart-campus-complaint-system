@@ -1,21 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 class="h4 mb-1">Triage rules</h2>
-<p class="text-muted small mb-3">
-  Rules decide the priority and routing department for a predicted category.
-  Changes take effect on the very next request &mdash; the rule cache is
-  invalidated on every save.
-</p>
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="page-title">Triage rules</h1>
+    <p class="text-secondary small mb-0">Rules decide the priority and routing department for a predicted category. Changes take effect on the very next request &mdash; the rule cache is invalidated on every save.</p>
+  </div>
+</div>
 
-<div class="card mb-4">
+<div class="card mb-3">
   <div class="card-header d-flex justify-content-between align-items-center">
     <span class="fw-semibold">Existing rules</span>
     <span class="text-muted small" id="rule-count">loading&hellip;</span>
   </div>
   <div class="card-body">
-    <div class="row mb-2">
-      <div class="col"><strong>New rule</strong></div>
-    </div>
     <form id="rule-form">
       <div class="row g-2">
         <div class="col-md-3">
@@ -58,7 +55,7 @@
   </div>
 </div>
 
-<div class="card">
+<div class="card mb-3">
   <div class="card-header fw-semibold">Active and inactive rules</div>
   <div class="card-body">
     <table class="table table-sm align-middle mb-0">
@@ -72,16 +69,13 @@
   </div>
 </div>
 
-<div class="card mt-4">
+<div class="card">
   <div class="card-header fw-semibold">Dry run</div>
   <div class="card-body">
-    <p class="small text-muted mb-2">
-      Preview what the current rules would decide for a piece of text, without
-      creating a complaint.
-    </p>
+    <p class="small text-secondary mb-2">Preview what the current rules would decide for a piece of text, without creating a complaint.</p>
     <textarea class="form-control form-control-sm mb-2" id="preview-text" rows="2"
       placeholder="Describe a problem, e.g. The tap is leaking and there is no water."></textarea>
-    <button class="btn btn-outline-secondary btn-sm" id="preview-btn">Preview</button>
+    <button class="btn btn-secondary btn-sm" id="preview-btn">Preview</button>
     <div id="preview-result" class="mt-2"></div>
   </div>
 </div>

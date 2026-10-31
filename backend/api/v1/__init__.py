@@ -12,6 +12,7 @@ from backend.api.v1 import (
     dashboard,
     ml,
     notifications,
+    reference,
 )
 
 router = APIRouter()
@@ -21,4 +22,5 @@ router.include_router(attachments.router)
 router.include_router(ml.router)
 router.include_router(dashboard.router)
 router.include_router(notifications.router)
+router.include_router(reference.router)
 router.include_router(admin.router)

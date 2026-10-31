@@ -1,9 +1,361 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="p-4 mb-4 bg-light rounded-3">
-  <h1 class="display-6">Smart Campus Complaint Management</h1>
-  <p class="lead">Register, track and resolve campus complaints with NLP-assisted triage.</p>
-  <a class="btn btn-primary" href="/complaints/new">Register a complaint</a>
-  <a class="btn btn-outline-secondary" href="/dashboard">Open dashboard</a>
-</div>
+{# Hero with cinematic gradient backdrop #}
+<section class="hero-section" aria-labelledby="hero-title">
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-badge" aria-hidden="true">
+        <span class="badge-pulse"></span>
+        DBMS CD252IA &middot; RVCE CSE
+      </div>
+      <h1 id="hero-title" class="hero-title">
+        Smart Campus<br><span class="text-primary">Complaint Management</span>
+      </h1>
+      <p class="hero-subtitle">
+        File, track, and resolve campus issues with NLP-assisted triage.
+        Students submit naturally; staff see structured, prioritized queues.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary btn-lg" href="/login">
+          <span>Sign in as Student</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14L21 3"/><path d="M21 3v6h-6"/></svg>
+        </a>
+        <a class="btn btn-secondary btn-lg" href="/register">
+          <span>Create Student Account</span>
+        </a>
+      </div>
+      <div class="hero-divider" aria-hidden="true"></div>
+      <div class="hero-roles">
+        <a class="role-card" href="/login">
+          <div class="role-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <span class="role-label">Student Portal</span>
+          <span class="role-desc">Submit & track complaints</span>
+        </a>
+        <a class="role-card" href="/login">
+          <div class="role-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+          </div>
+          <span class="role-label">Staff Portal</span>
+          <span class="role-desc">Manage, assign & resolve</span>
+        </a>
+        <a class="role-card" href="/login">
+          <div class="role-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+          </div>
+          <span class="role-label">Admin Console</span>
+          <span class="role-desc">Configure rules & models</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="hero-glow" aria-hidden="true"></div>
+</section>
+
+{# Feature highlights #}
+<section class="features-section" aria-labelledby="features-title">
+  <div class="container">
+    <header class="section-header">
+      <h2 id="features-title" class="section-title">How it works</h2>
+      <p class="section-subtitle">Three steps from problem to resolution</p>
+    </header>
+    <div class="features-grid">
+      <article class="feature-card" style="--delay: 0">
+        <div class="feature-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <h3 class="feature-title">Describe naturally</h3>
+        <p class="feature-desc">Write in plain language — what's wrong, where, since when. No forms to decipher.</p>
+      </article>
+      <article class="feature-card" style="--delay: 1">
+        <div class="feature-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v6"/><path d="M12 17v6"/><path d="M4.93 4.93a1 1 0 0 1 1.41 0l4.24 4.24"/><path d="M17.66 17.66a1 1 0 0 1 0 1.41l-4.24 4.24"/><path d="M1 12h6"/><path d="M17 12h6"/><path d="M4.93 19.07a1 1 0 0 1 0-1.41l4.24-4.24"/><path d="M14.83 6.34a1 1 0 0 1 1.41 0l4.24 4.24"/></svg>
+        </div>
+        <h3 class="feature-title">Auto-classify & route</h3>
+        <p class="feature-desc">TF-IDF + LinearSVC predicts category, priority, and department in milliseconds.</p>
+      </article>
+      <article class="feature-card" style="--delay: 2">
+        <div class="feature-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14"/><path d="M19 12H5"/><path d="M22 19H2"/><path d="M22 5H2"/></svg>
+        </div>
+        <h3 class="feature-title">Track to resolution</h3>
+        <p class="feature-desc">Real-time status, photo attachments, comments — hybrid PostgreSQL + MongoDB storage.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+{# Tech stack badges #}
+<section class="tech-section" aria-labelledby="tech-title">
+  <div class="container">
+    <header class="section-header">
+      <h2 id="tech-title" class="section-title">Built with</h2>
+    </header>
+    <div class="tech-grid">
+      <span class="tech-badge">FastAPI</span>
+      <span class="tech-badge">PostgreSQL</span>
+      <span class="tech-badge">MongoDB</span>
+      <span class="tech-badge">Jinja2</span>
+      <span class="tech-badge">scikit-learn</span>
+      <span class="tech-badge">Chart.js</span>
+      <span class="tech-badge">Bootstrap 5</span>
+      <span class="tech-badge">Alembic</span>
+    </div>
+  </div>
+</section>
+
+{# Footer context #}
+
+<style>
+/* ============ LANDING PAGE STYLES ============ */
+.hero-section {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: calc(var(--space-6) + 60px) 0 var(--space-6);
+  overflow: hidden;
+}
+.hero-glow {
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80vw;
+  height: 80vw;
+  max-width: 600px;
+  max-height: 600px;
+  background: radial-gradient(circle, rgba(46,196,182,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  animation: pulseGlow 6s ease-in-out infinite;
+}
+@keyframes pulseGlow { 0%,100% { opacity: 0.4; transform: translateX(-50%) scale(1); } 50% { opacity: 0.7; transform: translateX(-50%) scale(1.1); } }
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+  animation: fadeUp 0.8s var(--ease) forwards;
+  opacity: 0;
+}
+@keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  background: var(--primary-light);
+  border: 1px solid rgba(46,196,182,0.3);
+  border-radius: var(--radius-xl);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--primary);
+  letter-spacing: 0.02em;
+  margin-bottom: var(--space-5);
+  animation: fadeUp 0.8s var(--ease) 0.1s forwards;
+  opacity: 0;
+}
+.badge-pulse {
+  width: 8px; height: 8px;
+  background: var(--primary);
+  border-radius: 50%;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+@keyframes badgePulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.5; } }
+
+.hero-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-4);
+  animation: fadeUp 0.8s var(--ease) 0.2s forwards;
+  opacity: 0;
+}
+.hero-title .text-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent-blue) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.7;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto var(--space-6);
+  animation: fadeUp 0.8s var(--ease) 0.3s forwards;
+  opacity: 0;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: center;
+  margin-bottom: var(--space-8);
+  animation: fadeUp 0.8s var(--ease) 0.4s forwards;
+  opacity: 0;
+}
+.hero-actions .btn {
+  min-width: 220px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  justify-content: center;
+}
+.hero-actions .btn svg { transition: transform var(--duration-fast) var(--ease); }
+.hero-actions .btn:hover svg { transform: translateX(4px); }
+
+.hero-divider {
+  width: 100%;
+  max-width: 400px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 0 auto var(--space-6);
+  animation: fadeUp 0.8s var(--ease) 0.5s forwards;
+  opacity: 0;
+}
+
+.hero-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: center;
+  animation: fadeUp 0.8s var(--ease) 0.6s forwards;
+  opacity: 0;
+}
+
+.role-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  min-width: 160px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: border-color var(--duration-normal) var(--ease), background var(--duration-normal) var(--ease), color var(--duration-normal) var(--ease), transform var(--duration-normal) var(--ease), box-shadow var(--duration-normal) var(--ease);
+}
+.role-card:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+.role-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.role-icon { display: flex; color: var(--text-muted); transition: color var(--duration-fast) var(--ease); }
+.role-card:hover .role-icon { color: var(--primary); }
+.role-label { font-family: var(--font-display); font-weight: 600; font-size: 0.9375rem; color: var(--text-primary); }
+.role-desc { font-size: 0.75rem; color: var(--text-muted); transition: color var(--duration-fast) var(--ease); }
+.role-card:hover .role-desc { color: var(--text-secondary); }
+
+/* ============ FEATURES SECTION ============ */
+.features-section {
+  padding: var(--space-8) 0;
+  position: relative;
+  z-index: 1;
+}
+.section-header { text-align: center; margin-bottom: var(--space-8); }
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-2);
+}
+.section-subtitle { font-size: 1rem; color: var(--text-muted); margin: 0; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+.feature-card {
+  padding: var(--space-5);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: featureReveal 0.6s var(--ease) forwards;
+  animation-delay: calc(var(--delay) * 150ms + 0.2s);
+  transition: border-color var(--duration-normal) var(--ease), box-shadow var(--duration-normal) var(--ease);
+}
+@keyframes featureReveal { to { opacity: 1; transform: translateY(0); } }
+.feature-card:hover { border-color: var(--primary); box-shadow: var(--shadow-md); }
+.feature-icon {
+  display: inline-flex;
+  width: 56px; height: 56px;
+  align-items: center; justify-content: center;
+  background: var(--primary-light);
+  border-radius: var(--radius-md);
+  color: var(--primary);
+  margin-bottom: var(--space-3);
+  transition: transform var(--duration-normal) var(--ease), background var(--duration-normal) var(--ease), color var(--duration-normal) var(--ease);
+}
+.feature-card:hover .feature-icon { transform: scale(1.1) rotate(2deg); background: var(--primary); color: var(--primary-text); }
+.feature-title { font-family: var(--font-display); font-weight: 600; font-size: 1.125rem; color: var(--text-primary); margin: 0 0 var(--space-2); }
+.feature-desc { font-size: 0.875rem; line-height: 1.6; color: var(--text-secondary); margin: 0; }
+
+/* ============ TECH SECTION ============ */
+.tech-section {
+  padding: var(--space-8) 0;
+  border-top: 1px solid var(--border);
+  position: relative;
+  z-index: 1;
+}
+.tech-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+}
+.tech-badge {
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  transition: border-color var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease), background var(--duration-fast) var(--ease);
+}
+.tech-badge:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+/* ============ FOOTER ============ */
+/* Uses base.html footer */
+
+/* ============ MOBILE ============ */
+@media (max-width: 768px) {
+  .hero-section { min-height: auto; padding: calc(var(--space-6) + 60px) var(--space-3) var(--space-6); }
+  .hero-title { font-size: 2.25rem; }
+  .hero-subtitle { font-size: 1rem; }
+  .hero-actions { flex-direction: column; align-items: center; }
+  .hero-actions .btn { width: 100%; max-width: 300px; }
+  .role-card { min-width: calc(50% - var(--space-2)); padding: var(--space-3); }
+  .role-card:nth-child(3) { min-width: 100%; }
+  .features-grid { grid-template-columns: 1fr; }
+}
+
+/* ============ REDUCED MOTION ============ */
+@media (prefers-reduced-motion: reduce) {
+  .hero-glow, .badge-pulse, .hero-content, .hero-badge, .hero-title,
+  .hero-subtitle, .hero-actions, .hero-divider, .hero-roles,
+  .feature-card { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
+</style>
 {% endblock %}
