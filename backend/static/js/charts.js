@@ -17,6 +17,8 @@ const PALETTE = [
   "#dc3545", "#0dcaf0", "#198754", "#d63384",
 ];
 
+const CHART_TEXT_COLOR = "#e8e8e8"; // Light text for dark theme
+
 function truncate(label, max = 18) {
   const text = String(label ?? "");
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
@@ -58,13 +60,13 @@ function makeBarChart(canvasId, rows, color) {
       },
       scales: {
         x: {
-          grid: { display: window.innerWidth >= 576 },
-          ticks: { font: { size: chartFontSize() }, maxRotation: 45, minRotation: 0 },
+          grid: { display: window.innerWidth >= 576, color: "rgba(255,255,255,0.1)" },
+          ticks: { font: { size: chartFontSize(), color: CHART_TEXT_COLOR }, maxRotation: 45, minRotation: 0 },
         },
         y: {
           beginAtZero: true,
-          grid: { display: window.innerWidth < 576 },
-          ticks: { font: { size: chartFontSize() }, precision: 0 },
+          grid: { display: window.innerWidth < 576, color: "rgba(255,255,255,0.1)" },
+          ticks: { font: { size: chartFontSize(), color: CHART_TEXT_COLOR }, precision: 0 },
         },
       },
     },
@@ -93,7 +95,7 @@ function makeDoughnut(canvasId, rows) {
       plugins: {
         legend: {
           position: window.innerWidth < 576 ? "bottom" : "right",
-          labels: { font: { size: chartFontSize() }, boxWidth: 12 },
+          labels: { font: { size: chartFontSize(), color: CHART_TEXT_COLOR }, boxWidth: 12 },
         },
       },
     },
@@ -124,8 +126,8 @@ if (cards) {
         .map(
           (k) => `<div class="col-6 col-md-4 col-xl-2">
             <div class="card h-100"><div class="card-body text-center py-3">
-              <div class="kpi-value">${k.value}</div>
-              <div class="kpi-label">${k.label}</div>
+              <div class="kpi-value" style="color: #f1f2f4 !important; font-size: 2rem; font-weight: 600; font-family: var(--font-display);">${k.value}</div>
+              <div class="kpi-label" style="color: #a8adb8 !important; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">${k.label}</div>
             </div></div>
           </div>`
         )

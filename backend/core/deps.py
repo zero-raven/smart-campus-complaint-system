@@ -63,6 +63,30 @@ def get_current_user(
     return user
 
 
+def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+) -> AppUser | None:
+    """Resolve the authenticated user from Bearer token, or return None if absent."""
+    if credentials is None or not credentials.credentials:
+        return None
+
+    try:
+        payload = decode_token(credentials.credentials, expected_type="access")
+    except TokenError:
+        return None
+
+    user_id = payload.get("sub")
+    if user_id is None:
+        return None
+
+    user = db.get(AppUser, int(user_id))
+    if user is None or not user.is_active:
+        return None
+
+    return user
+
+
 def get_current_user_from_cookie(
     access_token_cookie: str | None = Cookie(None, alias="access_token"),
     db: Session = Depends(get_db),
@@ -103,6 +127,44 @@ def get_current_user_from_cookie(
 
 def get_user_context(user: AppUser = Depends(get_current_user), db: Session = Depends(get_db)) -> UserContext:
     """Wrap the current user with the fields scope checks need."""
+    staff_profile = (
+        db.query(Staff).filter(Staff.user_id == user.user_id).one_or_none()
+    )
+    return UserContext(
+        user_id=user.user_id,
+        role=user.role,
+        dept_id=user.dept_id,
+        staff_id=staff_profile.staff_id if staff_profile else None,
+        username=user.username,
+    )
+
+
+def get_user_context_from_cookie(user: AppUser = Depends(get_current_user_from_cookie), db: Session = Depends(get_db)) -> UserContext:
+    """Wrap the current user with the fields scope checks need (cookie auth)."""
+    staff_profile = (
+        db.query(Staff).filter(Staff.user_id == user.user_id).one_or_none()
+    )
+    return UserContext(
+        user_id=user.user_id,
+        role=user.role,
+        dept_id=user.dept_id,
+        staff_id=staff_profile.staff_id if staff_profile else None,
+        username=user.username,
+    )
+
+
+def get_user_context_flexible(
+    user_bearer: AppUser | None = Depends(get_current_user_optional),
+    user_cookie: AppUser | None = Depends(get_current_user_from_cookie),
+    db: Session = Depends(get_db),
+) -> UserContext:
+    """Wrap the current user with the fields scope checks need (Bearer or cookie)."""
+    user = user_bearer or user_cookie
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
     staff_profile = (
         db.query(Staff).filter(Staff.user_id == user.user_id).one_or_none()
     )

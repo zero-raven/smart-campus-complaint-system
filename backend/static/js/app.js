@@ -35,7 +35,7 @@ async function apiFetch(path, options = {}) {
   const token = getToken();
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const response = await fetch(`${API}${path}`, Object.assign({}, rest, { body, headers }));
+  const response = await fetch(`${API}${path}`, Object.assign({}, rest, { body, headers, credentials: "include" }));
   let data = null;
   try {
     data = await response.json();
@@ -159,10 +159,13 @@ function priorityBadge(code) {
 
 function renderComplaints(data) {
   if (!data.items.length) {
+    const colspan = (window.currentUser && window.currentUser.role === 'ADMIN') ? 7 : 6;
     complaintsBody.innerHTML =
-      '<tr><td colspan="6" class="text-muted py-4 text-center">No complaints found.</td></tr>';
+      `<tr><td colspan="${colspan}" class="text-muted py-4 text-center">No complaints found.</td></tr>`;
     return;
   }
+
+  const isAdmin = window.currentUser && window.currentUser.role === 'ADMIN';
 
   complaintsBody.innerHTML = data.items
     .map(
@@ -175,9 +178,25 @@ function renderComplaints(data) {
         <td data-label="Priority">${priorityBadge(c.priority_code)}</td>
         <td data-label="Department">${esc(c.dept_name || "")}</td>
         <td data-label="Raised">${esc(new Date(c.created_at).toLocaleDateString())}</td>
+        ${isAdmin ? `<td><button class="btn btn-sm btn-outline-danger delete-btn" data-id="${c.complaint_id}" data-ticket="${esc(c.ticket_no)}" title="Delete complaint">Delete</button></td>` : ''}
       </tr>`
     )
     .join("");
+
+  // Attach delete button handlers
+  if (isAdmin) {
+    complaintsBody.querySelectorAll(".delete-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        try {
+          await apiFetch(`/complaints/${id}`, { method: "DELETE" });
+          loadComplaints();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
+  }
 }
 
 async function loadComplaints() {
@@ -376,6 +395,7 @@ if (detailBox) {
     attachInput.addEventListener("change", () => {
       addDetailFiles(attachInput.files);
       attachInput.value = "";
+      updatePreviewActions();
     });
 
     ["dragenter", "dragover"].forEach((evt) =>
@@ -390,7 +410,59 @@ if (detailBox) {
         dropzone.classList.remove("is-dragover");
       })
     );
-    dropzone.addEventListener("drop", (e) => addDetailFiles(e.dataTransfer.files));
+    dropzone.addEventListener("drop", (e) => {
+      addDetailFiles(e.dataTransfer.files);
+      updatePreviewActions();
+    });
+  }
+
+  function updatePreviewActions() {
+    const actions = document.getElementById("preview-actions");
+    if (actions) {
+      actions.style.display = detailSelectedFiles.length ? "flex" : "none";
+    }
+  }
+
+  const uploadBtn = document.getElementById("upload-photos-btn");
+  const clearBtn = document.getElementById("clear-photos-btn");
+
+  if (uploadBtn) {
+    uploadBtn.addEventListener("click", async () => {
+      console.log("Upload photos clicked, files:", detailSelectedFiles.length);
+      if (!detailSelectedFiles.length) return;
+      uploadBtn.disabled = true;
+      if (attachMsg) attachMsg.innerHTML = '<div class="alert alert-info py-1 small mb-0">Uploading&hellip;</div>';
+      try {
+        const result = await uploadDetailPhotos(id);
+        if (result.failed === 0) {
+          if (attachMsg) attachMsg.innerHTML = `<div class="alert alert-success py-1 small mb-0">${result.uploaded} photo${result.uploaded === 1 ? "" : "s"} uploaded.</div>`;
+        } else {
+          if (attachMsg) attachMsg.innerHTML = `<div class="alert alert-warning py-1 small mb-0">${result.uploaded} uploaded, ${result.failed} failed: ${result.errors.join("; ")}</div>`;
+        }
+        detailSelectedFiles = [];
+        renderDetailPreviews();
+        updatePreviewActions();
+        await loadAttachments();
+      } catch (err) {
+        if (attachMsg) attachMsg.innerHTML = `<div class="alert alert-danger py-1 small mb-0">Upload error: ${err.message}</div>`;
+      } finally {
+        uploadBtn.disabled = false;
+      }
+    });
+  } else {
+    console.warn("upload-photos-btn not found in DOM");
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      console.log("Clear photos clicked");
+      detailSelectedFiles = [];
+      renderDetailPreviews();
+      updatePreviewActions();
+      if (attachMsg) attachMsg.innerHTML = "";
+    });
+  } else {
+    console.warn("clear-photos-btn not found in DOM");
   }
 
   async function uploadDetailPhotos(complaintId) {
@@ -432,50 +504,50 @@ if (detailBox) {
       grid.innerHTML = items
         .map(
           (a) => `<div class="col-6 col-md-4 col-lg-3">
-            <a href="${esc(a.url)}" target="_blank" rel="noopener">
-              <img class="attachment-thumb" src="${esc(a.url)}"
-                   alt="${esc(a.file_name)}" loading="lazy">
-            </a>
-            <div class="small text-muted mt-1 text-truncate">${esc(a.file_name)}</div>
-            <div class="small text-muted">${esc(humanSize(a.file_size))}</div>
+            <img class="attachment-thumb" src="${esc(a.url)}"
+                 alt="${esc(a.file_name)}" loading="lazy"
+                 data-full="${esc(a.url)}" data-name="${esc(a.file_name)}" style="cursor: zoom-in;">
+            <div class="small text-secondary mt-1 text-truncate">${esc(a.file_name)}</div>
+            <div class="small text-secondary">${esc(humanSize(a.file_size))}</div>
           </div>`
         )
         .join("");
+
+      // Add click-to-enlarge handlers
+      grid.querySelectorAll(".attachment-thumb").forEach((img) => {
+        img.addEventListener("click", () => openImageModal(img.dataset.full, img.dataset.name));
+      });
     } catch (err) {
       grid.innerHTML = `<div class="col-12"><div class="alert alert-secondary small">${esc(err.message)}</div></div>`;
     }
   }
 
-  if (attachInput) {
-    attachInput.addEventListener("change", async () => {
-      const files = Array.from(attachInput.files || []);
-      attachInput.value = "";
-      if (!files.length) return;
+  function openImageModal(src, name) {
+    // Remove existing modal if any
+    const existing = document.getElementById("image-modal");
+    if (existing) existing.remove();
 
-      if (attachMsg) attachMsg.innerHTML = '<div class="alert alert-info py-1 small mb-0">Uploading&hellip;</div>';
-      let ok = 0;
-      const errors = [];
-
-      for (const file of files) {
-        const body = new FormData();
-        body.append("file", file, file.name);
-        try {
-          await apiFetch(`/complaints/${id}/attachments`, { method: "POST", body });
-          ok += 1;
-        } catch (err) {
-          errors.push(`${file.name}: ${err.message}`);
-        }
-      }
-
-      if (!errors.length) {
-        if (attachMsg) attachMsg.innerHTML = `<div class="alert alert-success py-1 small mb-0">${ok} photo(s) attached.</div>`;
-      } else {
-        if (attachMsg) attachMsg.innerHTML = `<div class="alert alert-warning py-1 small mb-0">${
-          ok ? `${ok} attached. ` : ""
-        }Failed: ${errors.join("; ")}</div>`;
-      }
-      await loadAttachments();
-    });
+    const modal = document.createElement("div");
+    modal.id = "image-modal";
+    modal.className = "modal fade";
+    modal.tabIndex = -1;
+    modal.innerHTML = `
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-overlay border-0">
+          <div class="modal-header border-0">
+            <h5 class="modal-title" style="color: var(--text-primary);">${esc(name)}</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-0 text-center">
+            <img src="${esc(src)}" alt="${esc(name)}" style="max-width: 100%; max-height: 70vh; object-fit: contain;">
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    modal.addEventListener("hidden.bs.modal", () => modal.remove());
   }
 
   loadAttachments();

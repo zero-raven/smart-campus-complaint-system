@@ -18,7 +18,7 @@ from typing import Any
 import uuid
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -26,6 +26,7 @@ from backend.core.logging import get_logger
 from backend.models.complaint import (
     Assignment,
     Attachment,
+    Comment,
     Complaint,
     ComplaintEscalation,
     Notification,
@@ -858,3 +859,59 @@ def get_history(db: Session, complaint_id: int) -> list[dict[str, Any]]:
         }
         for h, status_row in rows
     ]
+
+
+def delete_complaint(
+    db: Session,
+    complaint_id: int,
+    actor: AppUser,
+    mongo_db=None,
+    mongo_db_name: str | None = None,
+) -> None:
+    """Delete a complaint and all its related data (attachments, comments, history, events).
+
+    Only ADMIN users may call this. The function removes:
+    - Attachments (GridFS + metadata)
+    - Comments
+    - Status history
+    - MongoDB activity events
+    - The complaint row itself
+    """
+    from backend.services import attachment_service
+    from backend.models.complaint import Complaint, Attachment, Comment, StatusHistory
+    from backend.services.outbox_relay import publish_pending_for_complaint
+
+    complaint = db.get(Complaint, complaint_id)
+    if complaint is None:
+        raise ComplaintError("Complaint not found", 404)
+
+    # Delete attachments (GridFS + metadata)
+    attachments = db.execute(
+        select(Attachment).where(Attachment.complaint_id == complaint_id)
+    ).scalars().all()
+    for att in attachments:
+        if att.storage_ref and att.storage_ref.startswith("gridfs:"):
+            attachment_service.delete_image(mongo_db_name, att.storage_ref.split(":", 1)[1])
+        db.delete(att)
+
+    # Delete comments
+    db.execute(
+        delete(Comment).where(Comment.complaint_id == complaint_id)
+    )
+
+    # Delete status history
+    db.execute(
+        delete(StatusHistory).where(StatusHistory.complaint_id == complaint_id)
+    )
+
+    # Delete the complaint
+    db.delete(complaint)
+    db.commit()
+
+    # Clean up MongoDB events for this complaint
+    if mongo_db is not None:
+        events_col = mongo_db.get_collection("complaint_events")
+        events_col.delete_many({"complaint_id": complaint_id})
+        publish_pending_for_complaint(mongo_db, complaint_id)
+
+    logger.info("Complaint %s deleted by %s", complaint_id, actor.username)

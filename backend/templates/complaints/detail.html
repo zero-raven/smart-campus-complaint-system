@@ -4,7 +4,7 @@
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
   <div>
-    <h1 class="page-title">Complaint</h1>
+    <h1 class="page-title" id="detail-title">Complaint</h1>
     <div class="text-secondary small" id="detail-ticket"></div>
   </div>
   <a class="btn btn-secondary btn-sm" href="/complaints">Back to list</a>
@@ -24,6 +24,10 @@
       <div class="small text-muted">Up to 3 images, 5 MB each. JPEG, PNG, WebP, GIF or HEIC.</div>
     </div>
     <div class="preview-grid" id="preview-grid-detail"></div>
+    <div class="d-flex gap-2 mt-2" id="preview-actions" style="display: none;">
+      <button class="btn btn-primary" type="button" id="upload-photos-btn">Upload photos</button>
+      <button class="btn btn-secondary" type="button" id="clear-photos-btn">Clear</button>
+    </div>
     <div id="attach-msg-detail" class="mt-2"></div>
 
     {# Photo gallery #}

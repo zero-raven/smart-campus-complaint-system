@@ -26,20 +26,20 @@
 
 <div class="card">
   <div class="card-header fw-semibold">Dataset and split methodology</div>
-  <div class="card-body small">
-    <p class="mb-2">
+  <div class="card-body" style="color: var(--text-primary);">
+    <p class="mb-2" style="color: var(--text-primary);">
       The corpus is <strong>synthetic</strong>: hand-written campus templates with
       perturbation plus deliberately ambiguous examples. No real campus complaint
       dataset exists for this project.
     </p>
-    <p class="mb-2">
+    <p class="mb-2" style="color: var(--text-primary);">
       Evaluation holds out entire <strong>templates</strong>, not random rows.
       Rows sharing a template are near-duplicates, so a random row split would
       place them in both train and test and inflate every metric to 1.00. The
       numbers above are out-of-fold: each example was scored by a model that had
       never seen its phrasing.
     </p>
-    <p class="mb-0 text-secondary">
+    <p class="mb-0" style="color: var(--text-secondary);">
       Selection metric is macro F1, not accuracy, because class imbalance makes
       accuracy reward ignoring rare categories.
     </p>
@@ -48,6 +48,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="/static/js/app.js"></script>
 <script>
 const body = document.getElementById("models-body");
 (async () => {

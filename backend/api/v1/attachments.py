@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from backend.core.config import get_settings
 from backend.core.database import get_db
-from backend.core.deps import get_current_user, get_user_context
+from backend.core.deps import get_current_user, get_user_context, get_user_context_flexible
 from backend.core.mongo import get_database
 from backend.core.permissions import Action, UserContext, can_view_complaint
 from backend.models.people import AppUser
@@ -112,7 +112,7 @@ def download_attachment(
     complaint_id: int,
     attachment_id: int,
     db: Session = Depends(get_db),
-    context: UserContext = Depends(get_user_context),
+    context: UserContext = Depends(get_user_context_flexible),
 ):
     """Stream the stored image back from GridFS."""
     _authorise_complaint(context, db, complaint_id)

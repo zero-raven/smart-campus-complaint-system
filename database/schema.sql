@@ -326,6 +326,18 @@ CREATE TABLE IF NOT EXISTS feedback (
 COMMENT ON TABLE feedback IS
     'Post-resolution satisfaction rating; one per user per complaint.';
 
+
+CREATE TABLE IF NOT EXISTS comment (
+    comment_id    BIGSERIAL PRIMARY KEY,
+    complaint_id  INTEGER NOT NULL REFERENCES complaint(complaint_id) ON DELETE CASCADE,
+    user_id       INTEGER NOT NULL REFERENCES app_user(user_id) ON DELETE RESTRICT,
+    body          TEXT NOT NULL,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+COMMENT ON TABLE comment IS
+    'Threaded discussion on a complaint. One row per comment.';
+
+
 CREATE TABLE IF NOT EXISTS audit_log (
     audit_id     BIGSERIAL PRIMARY KEY,
     actor_id     INTEGER REFERENCES app_user(user_id) ON DELETE SET NULL,

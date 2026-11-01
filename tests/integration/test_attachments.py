@@ -240,6 +240,8 @@ class TestAttachmentRBAC:
             f"/api/v1/complaints/{complaint['complaint_id']}/attachments",
             headers=auth_headers["STUDENT"],
         ).json()
+        # Clear cookies to simulate a truly anonymous request
+        client.cookies.clear()
         response = client.get(listing["items"][0]["url"])
         assert response.status_code == 401
 

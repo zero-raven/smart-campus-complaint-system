@@ -29,10 +29,11 @@
             <th scope="col">Priority</th>
             <th scope="col">Department</th>
             <th scope="col">Raised</th>
+            {% if user and user.role == 'ADMIN' %}<th scope="col"></th>{% endif %}
           </tr>
         </thead>
         <tbody id="complaints-body">
-          <tr><td colspan="6" class="text-muted">Loading&hellip;</td></tr>
+          <tr><td colspan="{% if user and user.role == 'ADMIN' %}7{% else %}6{% endif %}" class="text-muted">Loading&hellip;</td></tr>
         </tbody>
       </table>
     </div>

@@ -43,6 +43,7 @@ __all__ = [
     "Assignment",
     "ComplaintEscalation",
     "Attachment",
+    "Comment",
     "ComplaintTag",
     "ComplaintTagMap",
     "Notification",
@@ -207,6 +208,9 @@ class Complaint(Base):
     )
     attachments = relationship(
         "Attachment", back_populates="complaint", cascade="all, delete-orphan"
+    )
+    comments = relationship(
+        "Comment", back_populates="complaint", cascade="all, delete-orphan"
     )
 
 
@@ -394,6 +398,26 @@ class Feedback(Base):
     comment: Mapped[str | None] = mapped_column(Text)
     is_resolved_accurate: Mapped[bool | None] = mapped_column(Boolean)
     submitted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    complaint = relationship("Complaint")
+
+
+class Comment(Base):
+    """Comments on a complaint (threaded discussion)."""
+
+    __tablename__ = "comment"
+
+    comment_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    complaint_id: Mapped[int] = mapped_column(
+        ForeignKey("complaint.complaint_id", ondelete="CASCADE"), nullable=False
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("app_user.user_id", ondelete="RESTRICT"), nullable=False
+    )
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 

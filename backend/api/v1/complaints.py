@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from backend.core.database import get_db
@@ -33,6 +33,12 @@ def _mongo():
         return get_database()
     except Exception:  # pragma: no cover
         return None
+
+
+def _mongo_name() -> str | None:
+    """Database name for GridFS, or None to use the configured default."""
+    from backend.core.config import get_settings
+    return get_settings().mongo_db
 
 
 @router.post("", response_model=ComplaintCreateResponse, status_code=status.HTTP_201_CREATED)
@@ -208,3 +214,16 @@ def reopen(
     except svc.ComplaintError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
     return svc._to_response(updated, db)
+
+
+@router.delete("/{complaint_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_complaint(
+    complaint_id: int,
+    db: Session = Depends(get_db),
+    user: AppUser = Depends(get_current_user),
+):
+    """Delete a complaint and all its related data. Admin only."""
+    if user.role != "ADMIN":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
+    svc.delete_complaint(db, complaint_id, user, mongo_db=_mongo(), mongo_db_name=_mongo_name())
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
