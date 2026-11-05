@@ -87,5 +87,7 @@ def change_password(
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 @router.get("/logout", status_code=status.HTTP_204_NO_CONTENT, include_in_schema=False)
 def logout(response: Response) -> None:
-    """Clear the access token cookie."""
+    """Clear the access token cookie and redirect to home."""
     response.delete_cookie(key="access_token", path="/", httponly=True, samesite="lax")
+    response.headers["HX-Redirect"] = "/"
+    response.status_code = status.HTTP_302_FOUND

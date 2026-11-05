@@ -15,11 +15,13 @@ from backend.models.people import AppUser
 from backend.repositories import event_repository as events
 from backend.schemas.complaint import (
     AssignRequest,
+    CategoryChangeRequest,
     CommentRequest,
     ComplaintCreateRequest,
     ComplaintCreateResponse,
     ComplaintListResponse,
     ComplaintResponse,
+    PriorityChangeRequest,
     StatusChangeRequest,
 )
 from backend.services import complaint_service as svc
@@ -174,6 +176,52 @@ def change_status(
     try:
         updated = svc.change_status(
             db, complaint_id, payload.status_id, user, payload.remark, mongo_db=_mongo()
+        )
+    except svc.ComplaintError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return svc._to_response(updated, db)
+
+
+@router.post("/{complaint_id}/priority", response_model=ComplaintResponse)
+def change_priority(
+    complaint_id: int,
+    payload: PriorityChangeRequest,
+    db: Session = Depends(get_db),
+    user: AppUser = Depends(get_current_user),
+    context: UserContext = Depends(get_user_context),
+) -> ComplaintResponse:
+    complaint = svc.get_complaint_or_404(db, complaint_id)
+    if not can_mutate_complaint(
+        context, complaint.reported_by, complaint.dept_id, Action.TRANSITION_STATUS
+    ):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not permitted to change priority")
+
+    try:
+        updated = svc.change_priority(
+            db, complaint_id, payload.priority_id, user, payload.remark, mongo_db=_mongo()
+        )
+    except svc.ComplaintError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return svc._to_response(updated, db)
+
+
+@router.post("/{complaint_id}/category", response_model=ComplaintResponse)
+def change_category(
+    complaint_id: int,
+    payload: CategoryChangeRequest,
+    db: Session = Depends(get_db),
+    user: AppUser = Depends(get_current_user),
+    context: UserContext = Depends(get_user_context),
+) -> ComplaintResponse:
+    complaint = svc.get_complaint_or_404(db, complaint_id)
+    if not can_mutate_complaint(
+        context, complaint.reported_by, complaint.dept_id, Action.TRANSITION_STATUS
+    ):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not permitted to change category")
+
+    try:
+        updated = svc.change_category(
+            db, complaint_id, payload.category_id, user, payload.remark, mongo_db=_mongo()
         )
     except svc.ComplaintError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

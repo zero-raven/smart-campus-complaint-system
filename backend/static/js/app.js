@@ -261,9 +261,120 @@ const detailBox = document.getElementById("complaint-detail");
 if (detailBox) {
   const id = window.location.pathname.split("/").pop();
 
+  // Status & priority & category selectors
+  const statusSelect = document.getElementById("status-select");
+  const prioritySelect = document.getElementById("priority-select");
+  const categorySelect = document.getElementById("category-select");
+  const saveStatusBtn = document.getElementById("save-status-btn");
+  const savePriorityBtn = document.getElementById("save-priority-btn");
+  const saveCategoryBtn = document.getElementById("save-category-btn");
+  const actionButtons = document.getElementById("action-buttons");
+  const statusHint = document.getElementById("status-hint");
+  const priorityHint = document.getElementById("priority-hint");
+  const categoryHint = document.getElementById("category-hint");
+
+  let currentStatusId = null;
+  let currentPriorityId = null;
+  let currentCategoryId = null;
+
+  async function loadReferenceData() {
+    try {
+      const [statusesRes, prioritiesRes, categoriesRes] = await Promise.all([
+        apiFetch("/reference/statuses"),
+        apiFetch("/reference/priorities"),
+        apiFetch("/reference/categories"),
+      ]);
+      const statuses = statusesRes.items || [];
+      const priorities = prioritiesRes.items || [];
+      const categories = categoriesRes.items || [];
+
+      if (statusSelect) {
+        statusSelect.innerHTML = '<option value="">Select status...</option>' +
+          statuses.map(s => `<option value="${s.status_id}">${esc(s.status_name)} (${esc(s.status_code)})</option>`).join("");
+      }
+      if (prioritySelect) {
+        prioritySelect.innerHTML = '<option value="">Select priority...</option>' +
+          priorities.map(p => `<option value="${p.priority_id}">${esc(p.priority_name)} (${esc(p.priority_code)})</option>`).join("");
+      }
+      if (categorySelect) {
+        categorySelect.innerHTML = '<option value="">Select category...</option>' +
+          categories.map(c => `<option value="${c.category_id}">${esc(c.category_name)} (${esc(c.category_code)})</option>`).join("");
+      }
+    } catch (err) {
+      console.warn("Failed to load reference data:", err);
+    }
+  }
+
+  function updateActionButtons() {
+    const canChangeStatus = statusSelect && statusSelect.value && statusSelect.value != currentStatusId;
+    const canChangePriority = prioritySelect && prioritySelect.value && prioritySelect.value != currentPriorityId;
+    const canChangeCategory = categorySelect && categorySelect.value && categorySelect.value != currentCategoryId;
+    if (actionButtons) actionButtons.style.display = (canChangeStatus || canChangePriority || canChangeCategory) ? "flex" : "none";
+    if (saveStatusBtn) saveStatusBtn.disabled = !canChangeStatus;
+    if (savePriorityBtn) savePriorityBtn.disabled = !canChangePriority;
+    if (saveCategoryBtn) saveCategoryBtn.disabled = !canChangeCategory;
+  }
+
+  if (statusSelect) statusSelect.addEventListener("change", updateActionButtons);
+  if (prioritySelect) prioritySelect.addEventListener("change", updateActionButtons);
+  if (categorySelect) categorySelect.addEventListener("change", updateActionButtons);
+
+  if (saveStatusBtn) {
+    saveStatusBtn.addEventListener("click", async () => {
+      if (!statusSelect.value || statusSelect.value == currentStatusId) return;
+      try {
+        await apiFetch(`/complaints/${id}/status`, {
+          method: "POST",
+          body: JSON.stringify({ status_id: parseInt(statusSelect.value), remark: "" }),
+        });
+        currentStatusId = parseInt(statusSelect.value);
+        updateActionButtons();
+        loadAttachments(); // refresh timeline
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
+
+  if (savePriorityBtn) {
+    savePriorityBtn.addEventListener("click", async () => {
+      if (!prioritySelect.value || prioritySelect.value == currentPriorityId) return;
+      try {
+        await apiFetch(`/complaints/${id}/priority`, {
+          method: "POST",
+          body: JSON.stringify({ priority_id: parseInt(prioritySelect.value), remark: "" }),
+        });
+        currentPriorityId = parseInt(prioritySelect.value);
+        updateActionButtons();
+        loadAttachments(); // refresh timeline
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
+
+  if (saveCategoryBtn) {
+    saveCategoryBtn.addEventListener("click", async () => {
+      if (!categorySelect.value || categorySelect.value == currentCategoryId) return;
+      try {
+        await apiFetch(`/complaints/${id}/category`, {
+          method: "POST",
+          body: JSON.stringify({ category_id: parseInt(categorySelect.value), remark: "" }),
+        });
+        currentCategoryId = parseInt(categorySelect.value);
+        updateActionButtons();
+        loadAttachments(); // refresh timeline
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
+
   (async () => {
     try {
       const c = await apiFetch(`/complaints/${id}`);
+      currentStatusId = c.status_id;
+      currentPriorityId = c.priority_id;
       document.getElementById("detail-title").textContent = c.subject;
       document.getElementById("detail-ticket").textContent =
         `${c.ticket_no} · raised by ${c.reporter_name || "unknown"}`;
@@ -293,6 +404,31 @@ if (detailBox) {
             : ""}
         </dl>
       </div></div>`;
+
+      // Enable selectors if user has permission (staff/admin)
+      const user = window.currentUser;
+      if (user && (user.role === "STAFF" || user.role === "ADMIN")) {
+        if (statusSelect) statusSelect.disabled = false;
+        if (prioritySelect) prioritySelect.disabled = false;
+        if (categorySelect) categorySelect.disabled = false;
+        if (statusHint) statusHint.textContent = "Select a new status and click Save Status";
+        if (priorityHint) priorityHint.textContent = "Select a new priority and click Save Priority";
+        if (categoryHint) categoryHint.textContent = "Select a new category and click Save Category";
+      } else if (statusHint) {
+        statusHint.textContent = "Only staff and administrators can change status";
+      } else if (priorityHint) {
+        priorityHint.textContent = "Only staff and administrators can change priority";
+      } else if (categoryHint) {
+        categoryHint.textContent = "Only staff and administrators can change category";
+      }
+
+      await loadReferenceData();
+
+      // Set current values
+      if (statusSelect) statusSelect.value = c.status_id || "";
+      if (prioritySelect) prioritySelect.value = c.priority_id || "";
+      if (categorySelect) categorySelect.value = c.category_id || "";
+      updateActionButtons();
     } catch (err) {
       detailBox.innerHTML = `<div class="alert alert-danger">${esc(err.message)}</div>`;
     }

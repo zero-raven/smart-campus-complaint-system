@@ -5,7 +5,7 @@ API endpoints live under /api/v1. These routes serve the browser-facing pages.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from backend.core.deps import get_current_user_from_cookie
@@ -97,3 +97,10 @@ def admin_models_page(request: Request, user=Depends(get_current_user_from_cooki
     return request.app.state.templates.TemplateResponse(
         request=request, name="admin/models.html", context={"active_page": "admin_models", "user": _user_to_dict(user)}
     )
+
+
+@router.get("/logout", response_class=RedirectResponse, include_in_schema=False)
+def logout_page(response: Response):
+    """Clear the access token cookie and redirect to home."""
+    response.delete_cookie(key="access_token", path="/", httponly=True, samesite="lax")
+    return RedirectResponse(url="/", status_code=302)

@@ -124,12 +124,18 @@ if (cards) {
 
       cards.innerHTML = kpis
         .map(
-          (k) => `<div class="col-6 col-md-4 col-xl-2">
-            <div class="card h-100"><div class="card-body text-center py-3">
-              <div class="kpi-value" style="color: #f1f2f4 !important; font-size: 2rem; font-weight: 600; font-family: var(--font-display);">${k.value}</div>
-              <div class="kpi-label" style="color: #a8adb8 !important; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">${k.label}</div>
-            </div></div>
-          </div>`
+          (k, idx) => {
+            const accentColors = ["#2ec4b6", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#6f42c1"];
+            const accent = accentColors[idx % accentColors.length];
+            return `<div class="col-6 col-md-4 col-xl-2">
+              <div class="card h-100" style="border-top: 3px solid ${accent};">
+                <div class="card-body text-center py-4">
+                  <div class="kpi-value" style="color: #f1f2f4 !important; font-size: clamp(2rem, 4vw, 2.5rem); font-weight: 700; font-family: var(--font-display); line-height: 1.2; letter-spacing: -0.02em;">${k.value}</div>
+                  <div class="kpi-label" style="color: #a8adb8 !important; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-top: 0.5rem;">${k.label}</div>
+                </div>
+              </div>
+            </div>`;
+          }
         )
         .join("");
 
@@ -156,8 +162,8 @@ if (hybridCards) {
         .map(
           (e) => `<div class="col-12 col-md-4">
             <div class="text-center">
-              <div class="kpi-value">${e.value}</div>
-              <div class="kpi-label">${e.label}</div>
+              <div class="kpi-value" style="color: #f1f2f4 !important; font-size: clamp(2rem, 4vw, 2.5rem); font-weight: 700; font-family: var(--font-display); line-height: 1.2; letter-spacing: -0.02em;">${e.value}</div>
+              <div class="kpi-label" style="color: #a8adb8 !important; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-top: 0.5rem;">${e.label}</div>
             </div>
           </div>`
         )

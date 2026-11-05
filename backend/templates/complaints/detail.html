@@ -13,6 +13,42 @@
 <div id="complaint-detail"><p class="text-secondary">Loading&hellip;</p></div>
 
 <div class="card mt-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Actions</span>
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-12 col-md-4">
+        <label class="form-label">Change Status</label>
+        <select class="form-select" id="status-select" disabled>
+          <option value="">Select status...</option>
+        </select>
+        <div class="form-text" id="status-hint"></div>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">Change Priority</label>
+        <select class="form-select" id="priority-select" disabled>
+          <option value="">Select priority...</option>
+        </select>
+        <div class="form-text" id="priority-hint"></div>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">Change Category</label>
+        <select class="form-select" id="category-select" disabled>
+          <option value="">Select category...</option>
+        </select>
+        <div class="form-text" id="category-hint"></div>
+      </div>
+    </div>
+    <div class="d-flex gap-2 mt-3" id="action-buttons" style="display: none;">
+      <button class="btn btn-primary" type="button" id="save-status-btn">Save Status</button>
+      <button class="btn btn-secondary" type="button" id="save-priority-btn">Save Priority</button>
+      <button class="btn btn-secondary" type="button" id="save-category-btn">Save Category</button>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
   <div class="card-header">Photos</div>
   <div class="card-body">
     {# Photo upload (inline) #}

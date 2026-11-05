@@ -100,6 +100,16 @@ class CommentRequest(BaseModel):
     body: str = Field(min_length=1, max_length=2000)
 
 
+class PriorityChangeRequest(BaseModel):
+    priority_id: int
+    remark: str | None = Field(default=None, max_length=1000)
+
+
+class CategoryChangeRequest(BaseModel):
+    category_id: int
+    remark: str | None = Field(default=None, max_length=1000)
+
+
 class ComplaintListResponse(BaseModel):
     items: list[ComplaintResponse]
     total: int

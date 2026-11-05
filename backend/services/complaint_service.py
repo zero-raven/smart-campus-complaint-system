@@ -551,6 +551,107 @@ def change_status(
     return complaint
 
 
+def change_priority(
+    db: Session,
+    complaint_id: int,
+    new_priority_id: int,
+    actor: AppUser,
+    remark: str | None = None,
+    mongo_db=None,
+) -> Complaint:
+    """Change the priority of a complaint."""
+    complaint = get_complaint_or_404(db, complaint_id)
+
+    if new_priority_id == complaint.priority_id:
+        raise ComplaintError("Complaint already has that priority", 409)
+
+    target = db.get(Priority, new_priority_id)
+    if target is None:
+        raise ComplaintError(f"Priority {new_priority_id} does not exist", 422)
+
+    old_priority_id = complaint.priority_id
+    complaint.priority_id = new_priority_id
+
+    db.add(
+        StatusHistory(
+            complaint_id=complaint_id,
+            old_status_id=complaint.status_id,
+            new_status_id=complaint.status_id,
+            changed_by=actor.user_id,
+            remarks=f"Priority changed from {old_priority_id} to {new_priority_id}" + (f": {remark}" if remark else ""),
+        )
+    )
+
+    _enqueue_event(
+        db,
+        complaint,
+        events.EVENT_PRIORITY_CHANGED,
+        actor,
+        payload={
+            "from_priority_id": old_priority_id,
+            "to_priority_id": new_priority_id,
+            "remark": remark,
+        },
+    )
+
+    _notify(db, complaint, actor, f"Priority changed to {target.priority_name}")
+    db.commit()
+    db.refresh(complaint)
+    _publish_inline(mongo_db, complaint_id)
+    return complaint
+
+
+def change_category(
+    db: Session,
+    complaint_id: int,
+    new_category_id: int,
+    actor: AppUser,
+    remark: str | None = None,
+    mongo_db=None,
+) -> Complaint:
+    """Change the category of a complaint."""
+    complaint = get_complaint_or_404(db, complaint_id)
+
+    if new_category_id == complaint.category_id:
+        raise ComplaintError("Complaint already has that category", 409)
+
+    target = db.get(Category, new_category_id)
+    if target is None:
+        raise ComplaintError(f"Category {new_category_id} does not exist", 422)
+
+    old_category_id = complaint.category_id
+    old_category_code = complaint.category_code if hasattr(complaint, 'category_code') else None
+    complaint.category_id = new_category_id
+
+    db.add(
+        StatusHistory(
+            complaint_id=complaint_id,
+            old_status_id=complaint.status_id,
+            new_status_id=complaint.status_id,
+            changed_by=actor.user_id,
+            remarks=f"Category changed from {old_category_id} to {new_category_id}" + (f": {remark}" if remark else ""),
+        )
+    )
+
+    _enqueue_event(
+        db,
+        complaint,
+        events.EVENT_CATEGORY_CHANGED,
+        actor,
+        payload={
+            "from_category_id": old_category_id,
+            "to_category_id": new_category_id,
+            "remark": remark,
+        },
+    )
+
+    _notify(db, complaint, actor, f"Category changed to {target.category_name}")
+    db.commit()
+    db.refresh(complaint)
+    _publish_inline(mongo_db, complaint_id)
+    return complaint
+
+
 def reopen_complaint(
     db: Session, complaint_id: int, actor: AppUser, remark: str, mongo_db=None
 ) -> Complaint:

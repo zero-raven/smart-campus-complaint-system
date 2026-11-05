@@ -42,7 +42,7 @@ def _authorise_complaint(context: UserContext, db: Session, complaint_id: int):
 def list_attachments(
     complaint_id: int,
     db: Session = Depends(get_db),
-    context: UserContext = Depends(get_user_context),
+    context: UserContext = Depends(get_user_context_flexible),
 ):
     """Attachment metadata for a complaint. Bytes are fetched separately."""
     _authorise_complaint(context, db, complaint_id)
