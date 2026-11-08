@@ -109,13 +109,15 @@
 
 <style>
 /* ============ LANDING PAGE STYLES ============ */
+/* Remove main wrapper padding on landing so hero sits directly under navbar */
+main.container { padding-top: 0 !important; }
 .hero-section {
   position: relative;
-  min-height: 100vh;
+  min-height: calc(100vh - 64px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: calc(var(--space-4) + 56px) var(--space-4) var(--space-6);
+  padding: calc(64px + var(--space-6)) var(--space-4) var(--space-8);
   overflow: hidden;
 }
 .hero-glow {
@@ -342,7 +344,7 @@
 
 /* ============ MOBILE ============ */
 @media (max-width: 768px) {
-  .hero-section { min-height: auto; padding: calc(var(--space-6) + 60px) var(--space-3) var(--space-6); }
+  .hero-section { min-height: auto; padding: calc(56px + var(--space-6)) var(--space-3) var(--space-6); }
   .hero-title { font-size: 2.25rem; }
   .hero-subtitle { font-size: 1rem; }
   .hero-actions { flex-direction: column; align-items: center; }

@@ -103,7 +103,7 @@ if (registerForm) {
 }
 
 /* ---- Complaint list ---- */
-const complaintsBody = document.getElementById("complaints-body");
+const complaintsContainer = document.getElementById("complaints-container");
 const listSubtitle = document.getElementById("list-subtitle");
 const searchInput = document.getElementById("search");
 const statusFilter = document.getElementById("filter-status");
@@ -159,35 +159,66 @@ function priorityBadge(code) {
 
 function renderComplaints(data) {
   if (!data.items.length) {
-    const colspan = (window.currentUser && window.currentUser.role === 'ADMIN') ? 7 : 6;
-    complaintsBody.innerHTML =
-      `<tr><td colspan="${colspan}" class="text-muted py-4 text-center">No complaints found.</td></tr>`;
+    complaintsContainer.innerHTML = `
+      <div class="text-center py-5">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--text-muted); margin-bottom: 16px;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <h3 style="color: var(--text-primary); font-size: 1.25rem; margin-bottom: 8px;">No complaints found</h3>
+        <p class="text-secondary small">Try adjusting your search or filters.</p>
+      </div>`;
     return;
   }
 
   const isAdmin = window.currentUser && window.currentUser.role === 'ADMIN';
 
-  complaintsBody.innerHTML = data.items
+  complaintsContainer.innerHTML = data.items
     .map(
-      (c) => `<tr>
-        <td data-label="Ticket">
-          <a href="/complaints/${c.complaint_id}">${esc(c.ticket_no)}</a>
-        </td>
-        <td data-label="Subject">${esc(c.subject)}</td>
-        <td data-label="Status">${statusBadge(c.status_code)}</td>
-        <td data-label="Priority">${priorityBadge(c.priority_code)}</td>
-        <td data-label="Department">${esc(c.dept_name || "")}</td>
-        <td data-label="Raised">${esc(new Date(c.created_at).toLocaleDateString())}</td>
-        ${isAdmin ? `<td><button class="btn btn-sm btn-outline-danger delete-btn" data-id="${c.complaint_id}" data-ticket="${esc(c.ticket_no)}" title="Delete complaint">Delete</button></td>` : ''}
-      </tr>`
+      (c) => `
+      <div class="complaint-card" onclick="window.location.href='/complaints/${c.complaint_id}'">
+        <div class="complaint-card-header">
+          <div style="flex-grow: 1;">
+            <div class="complaint-ticket">${esc(c.ticket_no)}</div>
+            <h3 class="complaint-subject">${esc(c.subject)}</h3>
+          </div>
+          <div class="complaint-actions">
+            ${statusBadge(c.status_code)}
+            ${priorityBadge(c.priority_code)}
+            ${isAdmin ? `<button class="btn btn-sm btn-outline-danger delete-btn" data-id="${c.complaint_id}" data-ticket="${esc(c.ticket_no)}" title="Delete complaint" onclick="event.stopPropagation()">Delete</button>` : ''}
+          </div>
+        </div>
+        <div class="complaint-meta">
+          <span class="complaint-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 21h18"/><path d="M6 18v-9a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v9"/><path d="M10 21V11"/>
+            </svg>
+            ${esc(c.dept_name || "")}
+          </span>
+          <span class="complaint-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            ${esc(new Date(c.created_at).toLocaleDateString())}
+          </span>
+          ${c.reporter_name ? `<span class="complaint-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            ${esc(c.reporter_name)}
+          </span>` : ''}
+        </div>
+      </div>`
     )
     .join("");
 
   // Attach delete button handlers
   if (isAdmin) {
-    complaintsBody.querySelectorAll(".delete-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
+    complaintsContainer.querySelectorAll(".delete-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         const id = btn.dataset.id;
+        if (!confirm(`Delete complaint ${btn.dataset.ticket}?`)) return;
         try {
           await apiFetch(`/complaints/${id}`, { method: "DELETE" });
           loadComplaints();
@@ -215,12 +246,12 @@ async function loadComplaints() {
       listSubtitle.textContent = `${data.total} complaint${data.total === 1 ? "" : "s"} visible to you`;
     }
   } catch (err) {
-    complaintsBody.innerHTML = `<tr><td colspan="6" class="text-danger">${esc(err.message)}</td></tr>`;
+    complaintsContainer.innerHTML = `<div class="alert alert-danger">${esc(err.message)}</div>`;
     if (listSubtitle) listSubtitle.textContent = "";
   }
 }
 
-if (complaintsBody) {
+if (complaintsContainer) {
   // Populate the status filter from the reference data the API exposes.
   if (statusFilter) {
     apiFetch("/reference/statuses")

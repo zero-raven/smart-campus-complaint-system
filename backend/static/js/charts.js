@@ -12,12 +12,20 @@
 const cards = document.getElementById("kpi-cards");
 const hybridCards = document.getElementById("hybrid-cards");
 
+// Design system palette - premium dark with teal primary
 const PALETTE = [
-  "#0d6efd", "#20c997", "#fd7e14", "#6f42c1",
-  "#dc3545", "#0dcaf0", "#198754", "#d63384",
+  "#2ec4b6",  // Primary teal
+  "#3b82f6",  // Accent blue
+  "#10b981",  // Success green
+  "#f59e0b",  // Warning amber
+  "#ef4444",  // Danger red
+  "#06b6d4",  // Info cyan
+  "#8b5cf6",  // Purple
+  "#ec4899",  // Pink
 ];
 
-const CHART_TEXT_COLOR = "#e8e8e8"; // Light text for dark theme
+const CHART_TEXT_COLOR = "#e6e8eb"; // Light text for dark theme
+const CHART_GRID_COLOR = "rgba(255, 255, 255, 0.05)";
 
 function truncate(label, max = 18) {
   const text = String(label ?? "");
@@ -60,12 +68,12 @@ function makeBarChart(canvasId, rows, color) {
       },
       scales: {
         x: {
-          grid: { display: window.innerWidth >= 576, color: "rgba(255,255,255,0.1)" },
+          grid: { display: window.innerWidth >= 576, color: CHART_GRID_COLOR },
           ticks: { font: { size: chartFontSize(), color: CHART_TEXT_COLOR }, maxRotation: 45, minRotation: 0 },
         },
         y: {
           beginAtZero: true,
-          grid: { display: window.innerWidth < 576, color: "rgba(255,255,255,0.1)" },
+          grid: { display: window.innerWidth < 576, color: CHART_GRID_COLOR },
           ticks: { font: { size: chartFontSize(), color: CHART_TEXT_COLOR }, precision: 0 },
         },
       },
@@ -125,13 +133,13 @@ if (cards) {
       cards.innerHTML = kpis
         .map(
           (k, idx) => {
-            const accentColors = ["#2ec4b6", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#6f42c1"];
+            const accentColors = ["#2ec4b6", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
             const accent = accentColors[idx % accentColors.length];
             return `<div class="col-6 col-md-4 col-xl-2">
               <div class="card h-100" style="border-top: 3px solid ${accent};">
                 <div class="card-body text-center py-4">
-                  <div class="kpi-value" style="color: #f1f2f4 !important; font-size: clamp(2rem, 4vw, 2.5rem); font-weight: 700; font-family: var(--font-display); line-height: 1.2; letter-spacing: -0.02em;">${k.value}</div>
-                  <div class="kpi-label" style="color: #a8adb8 !important; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-top: 0.5rem;">${k.label}</div>
+                  <div class="kpi-value" style="color: var(--text-primary); font-size: clamp(2rem, 4vw, 2.5rem); font-weight: 700; font-family: var(--font-display); line-height: 1.2; letter-spacing: -0.02em;">${k.value}</div>
+                  <div class="kpi-label" style="color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-top: 0.5rem;">${k.label}</div>
                 </div>
               </div>
             </div>`;
@@ -139,10 +147,10 @@ if (cards) {
         )
         .join("");
 
-      makeBarChart("chart-category", breakdown.by_category, "#0d6efd");
+      makeBarChart("chart-category", breakdown.by_category, "#2ec4b6");
       makeDoughnut("chart-status", breakdown.by_status);
-      makeBarChart("chart-priority", breakdown.by_priority, "#fd7e14");
-      makeBarChart("chart-department", breakdown.by_department, "#20c997");
+      makeBarChart("chart-priority", breakdown.by_priority, "#f59e0b");
+      makeBarChart("chart-department", breakdown.by_department, "#3b82f6");
     } catch (err) {
       cards.innerHTML = `<div class="col-12"><div class="alert alert-danger">${err.message}</div></div>`;
     }
@@ -162,8 +170,8 @@ if (hybridCards) {
         .map(
           (e) => `<div class="col-12 col-md-4">
             <div class="text-center">
-              <div class="kpi-value" style="color: #f1f2f4 !important; font-size: clamp(2rem, 4vw, 2.5rem); font-weight: 700; font-family: var(--font-display); line-height: 1.2; letter-spacing: -0.02em;">${e.value}</div>
-              <div class="kpi-label" style="color: #a8adb8 !important; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-top: 0.5rem;">${e.label}</div>
+              <div class="kpi-value" style="color: var(--text-primary); font-size: clamp(2rem, 4vw, 2.5rem); font-weight: 700; font-family: var(--font-display); line-height: 1.2; letter-spacing: -0.02em;">${e.value}</div>
+              <div class="kpi-label" style="color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-top: 0.5rem;">${e.label}</div>
             </div>
           </div>`
         )

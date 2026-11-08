@@ -2,60 +2,78 @@
 {% block title %}Complaint {{ complaint_id }} · {{ app_name }}{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
-  <div>
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+  <div style="flex-grow: 1;">
     <h1 class="page-title" id="detail-title">Complaint</h1>
-    <div class="text-secondary small" id="detail-ticket"></div>
+    <div class="text-secondary small mt-1" id="detail-ticket"></div>
   </div>
-  <a class="btn btn-secondary btn-sm" href="/complaints">Back to list</a>
+  <a class="btn btn-outline-light" href="/complaints">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+      <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+    </svg>
+    Back to list
+  </a>
 </div>
 
-<div id="complaint-detail"><p class="text-secondary">Loading&hellip;</p></div>
-
-<div class="card mt-3">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <span>Actions</span>
+<div id="complaint-detail">
+  <div class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading&hellip;</span>
+    </div>
+    <p class="text-secondary small mt-3">Loading complaint&hellip;</p>
   </div>
-  <div class="card-body">
-    <div class="row g-3">
-      <div class="col-12 col-md-4">
-        <label class="form-label">Change Status</label>
+</div>
+
+<div class="card mt-4">
+  <div class="card-header d-flex justify-content-between align-items-center py-3 px-4">
+    <span class="fw-semibold" style="color: var(--text-primary); font-size: 1rem;">Actions</span>
+    <span class="text-muted small">Update complaint attributes</span>
+  </div>
+  <div class="card-body p-4">
+    <div class="row g-4">
+      <div class="col-12 col-md-6 col-lg-3">
+        <label class="form-label fw-medium mb-2" style="color: var(--text-primary);">Change Status</label>
         <select class="form-select" id="status-select" disabled>
           <option value="">Select status...</option>
         </select>
         <div class="form-text" id="status-hint"></div>
       </div>
-      <div class="col-12 col-md-4">
-        <label class="form-label">Change Priority</label>
+      <div class="col-12 col-md-6 col-lg-3">
+        <label class="form-label fw-medium mb-2" style="color: var(--text-primary);">Change Priority</label>
         <select class="form-select" id="priority-select" disabled>
           <option value="">Select priority...</option>
         </select>
         <div class="form-text" id="priority-hint"></div>
       </div>
-      <div class="col-12 col-md-4">
-        <label class="form-label">Change Category</label>
+      <div class="col-12 col-md-6 col-lg-3">
+        <label class="form-label fw-medium mb-2" style="color: var(--text-primary);">Change Category</label>
         <select class="form-select" id="category-select" disabled>
           <option value="">Select category...</option>
         </select>
         <div class="form-text" id="category-hint"></div>
       </div>
-      <div class="col-12 col-md-4">
-        <label class="form-label">Change Department</label>
+      <div class="col-12 col-md-6 col-lg-3">
+        <label class="form-label fw-medium mb-2" style="color: var(--text-primary);">Change Department</label>
         <select class="form-select" id="dept-select" disabled>
           <option value="">Select department...</option>
         </select>
         <div class="form-text" id="dept-hint"></div>
       </div>
     </div>
-    <div class="row g-3 mt-2" id="status-remark-row" style="display: none;">
+    <div class="row g-3 mt-3" id="status-remark-row" style="display: none;">
       <div class="col-12">
-        <label class="form-label" for="status-remark">Remark <span class="text-danger">*</span></label>
-        <textarea class="form-control" id="status-remark" rows="2" placeholder="Enter reason for status change..."></textarea>
+        <label class="form-label fw-medium" for="status-remark" style="color: var(--text-primary);">Remark <span class="text-danger">*</span></label>
+        <textarea class="form-control" id="status-remark" rows="3" placeholder="Enter reason for status change..."></textarea>
         <div class="form-text" id="status-remark-hint"></div>
       </div>
     </div>
-    <div class="d-flex gap-2 mt-3" id="action-buttons" style="display: none;">
-      <button class="btn btn-primary" type="button" id="save-status-btn">Save Status</button>
+    <div class="d-flex flex-wrap gap-2 mt-4 pt-3 border-top" id="action-buttons" style="display: none; border-color: var(--border) !important;">
+      <button class="btn btn-primary" type="button" id="save-status-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Save Status
+      </button>
       <button class="btn btn-secondary" type="button" id="save-priority-btn">Save Priority</button>
       <button class="btn btn-secondary" type="button" id="save-category-btn">Save Category</button>
       <button class="btn btn-secondary" type="button" id="save-dept-btn">Save Department</button>

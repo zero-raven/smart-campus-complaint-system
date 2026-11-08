@@ -164,6 +164,74 @@ All seeded accounts use the password `Campus@2026`.
 Students self-register; STAFF and ADMIN accounts can only be created by an
 administrator through `POST /api/v1/admin/users`.
 
+## Accounts, signup, and roles
+
+### Self-signup is always a student account
+
+The public **Register** page (`/register`, `POST /api/v1/auth/register`) creates a
+`STUDENT` account automatically. There is intentionally no role picker on the
+signup form, and the API does not accept a role from the client — `RegisterRequest`
+has no role field at all, and the service hard-codes `SELF_REGISTERABLE_ROLE = "STUDENT"`
+(`backend/services/auth_service.py`). A registrant is active immediately; there is
+no email verification and **no approval queue**.
+
+Signup fields: username (3–60 chars, letters/digits/`._-`, stored lowercased),
+email, password (8–72 chars), full name, plus optional USN, phone, semester
+(1–10), section, and hostel. Username, email, and USN must each be unique —
+duplicates return `409` with a friendly message. Registration writes a
+`USER_REGISTERED` audit log entry.
+
+### Getting staff (or admin/viewer) access
+
+There is no self-promotion path and no "request staff access" flow. Only an
+existing administrator can create `STAFF`, `ADMIN`, or `VIEWER` accounts, via
+`POST /api/v1/admin/users` (requires the `MANAGE_USERS` permission, which only
+ADMIN has):
+
+```bash
+curl -X POST http://localhost:8000/api/v1/admin/users \
+  -H "Authorization: Bearer <admin-access-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "jane.staff",
+    "email": "jane@rvce.edu.in",
+    "password": "ChangeMe2026!",
+    "full_name": "Jane Doe",
+    "role": "STAFF",
+    "dept_id": 1,
+    "designation": "Assistant Professor"
+  }'
+```
+
+- `role` must be `STAFF`, `ADMIN`, or `VIEWER` (not `STUDENT`).
+- `dept_id` is **required** for STAFF and ADMIN (returns `422` without it);
+  a `Staff` profile row is created automatically with the designation.
+- There is no promote/demote endpoint — role assignment happens only at
+  account creation. To change someone's role, an admin deactivates/recreates
+  the account (or updates it directly in the database).
+
+So in practice: a student signs up, and if they need staff access, an admin
+provisions a separate staff account for them. Seeded staff accounts used for
+demos (`eee.head`, `it.head`, `civil.head`, …) were created this way.
+
+### Role permissions at a glance
+
+| Capability | STUDENT | STAFF | ADMIN | VIEWER |
+|---|---|---|---|---|
+| Create/view own complaints | ✓ | ✓ (own dept) | ✓ (all) | — |
+| Comment | own tickets | own dept | all | — |
+| Change status / priority / category | — | own dept | all | — |
+| Change department | — | — | ✓ | — |
+| Delete complaint | — | — | ✓ | — |
+| Dashboard | ✓ | ✓ (own dept) | ✓ (all) | — |
+| Rules / Models admin | — | — | ✓ | — |
+| Manage users | — | — | ✓ | — |
+
+Status transitions: ADMIN may move a complaint to **any** status (state machine
+bypass, remark still required for RESOLVED/CLOSED/REJECTED). STAFF see the full
+status dropdown in the UI but the API still enforces valid transitions — invalid
+moves return `409`.
+
 ## Verification
 
 ```bash
@@ -190,6 +258,9 @@ python scripts/seed_demo.py          # populate the dashboard
 | `docs/erd.md` | how to read the diagram, cardinality summary |
 | `docs/test_matrix.md` | every requirement mapped to named tests |
 | `ml/reports/latest_report.json` | raw metrics behind the ML report |
+| `PRD.md` | full UI rework product requirements document |
+| `UI_REWORK_SUMMARY.md` | UI overhaul implementation summary |
+| `design/COMMIT-SHEET*.md` | design decisions (`design/DESIGN.md` = style contract) |
 
 ## Features
 
@@ -202,6 +273,7 @@ python scripts/seed_demo.py          # populate the dashboard
 | Staff assignment and status transitions | `/api/v1/complaints/{id}/assign`, `/status` |
 | Activity timeline (PostgreSQL history + MongoDB events) | `/complaints/{id}` |
 | **Photo attachments — optional, stored not processed** | GridFS bytes + `attachment` metadata row |
+| Admin-only department reassignment | `/complaints/{id}` (department dropdown) |
 | In-app notifications with unread badge | `/api/v1/notifications` |
 | Analytical dashboard, charts, trends, SLA | `/dashboard` |
 | Model registry with measured metrics | `/admin/models` |
@@ -248,7 +320,9 @@ small, synthetic corpus — see `docs/ml_report.md` for why.
 
 ## Known limitations
 
-- Attachments are metadata-only; binary content is not stored.
 - Notifications are in-app; no email or SMS.
+- Attachments depend on MongoDB GridFS — if MongoDB is down, uploads return
+  `503` and image retrieval fails while core complaint CRUD still works (the
+  hybrid design degrades rather than losing data).
 - The training corpus is synthetic and small; see `docs/ml_report.md`.
 - No CSRF token on the JSON API (it is token-authenticated, not cookie-based).
