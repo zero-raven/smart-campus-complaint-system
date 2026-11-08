@@ -175,7 +175,7 @@ class TestStatusMachine:
         # SUBMITTED cannot jump straight to CLOSED.
         response = client.post(
             f"/api/v1/complaints/{complaint_id}/status",
-            headers=auth_headers["ADMIN"],
+            headers=auth_headers["STAFF"],
             json={"status_id": 6, "remark": "skipping ahead"},
         )
         assert response.status_code == 409
@@ -186,7 +186,7 @@ class TestStatusMachine:
         ).json()
         response = client.post(
             f"/api/v1/complaints/{created['complaint']['complaint_id']}/status",
-            headers=auth_headers["ADMIN"],
+            headers=auth_headers["STAFF"],
             json={"status_id": 1},
         )
         assert response.status_code == 409

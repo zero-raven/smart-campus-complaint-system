@@ -261,32 +261,44 @@ const detailBox = document.getElementById("complaint-detail");
 if (detailBox) {
   const id = window.location.pathname.split("/").pop();
 
-  // Status & priority & category selectors
+  // Status & priority & category & department selectors
   const statusSelect = document.getElementById("status-select");
   const prioritySelect = document.getElementById("priority-select");
   const categorySelect = document.getElementById("category-select");
+  const deptSelect = document.getElementById("dept-select");
   const saveStatusBtn = document.getElementById("save-status-btn");
   const savePriorityBtn = document.getElementById("save-priority-btn");
   const saveCategoryBtn = document.getElementById("save-category-btn");
+  const saveDeptBtn = document.getElementById("save-dept-btn");
   const actionButtons = document.getElementById("action-buttons");
   const statusHint = document.getElementById("status-hint");
   const priorityHint = document.getElementById("priority-hint");
   const categoryHint = document.getElementById("category-hint");
+  const deptHint = document.getElementById("dept-hint");
+  const statusRemarkRow = document.getElementById("status-remark-row");
+  const statusRemarkInput = document.getElementById("status-remark");
+  const statusRemarkHint = document.getElementById("status-remark-hint");
 
   let currentStatusId = null;
   let currentPriorityId = null;
   let currentCategoryId = null;
+  let currentDeptId = null;
+  let validTransitions = [];
 
   async function loadReferenceData() {
     try {
-      const [statusesRes, prioritiesRes, categoriesRes] = await Promise.all([
+      const [statusesRes, prioritiesRes, categoriesRes, deptsRes, transitionsRes] = await Promise.all([
         apiFetch("/reference/statuses"),
         apiFetch("/reference/priorities"),
         apiFetch("/reference/categories"),
+        apiFetch("/reference/departments"),
+        apiFetch("/reference/transitions"),
       ]);
       const statuses = statusesRes.items || [];
       const priorities = prioritiesRes.items || [];
       const categories = categoriesRes.items || [];
+      const departments = deptsRes.items || [];
+      validTransitions = transitionsRes.items || [];
 
       if (statusSelect) {
         statusSelect.innerHTML = '<option value="">Select status...</option>' +
@@ -300,8 +312,101 @@ if (detailBox) {
         categorySelect.innerHTML = '<option value="">Select category...</option>' +
           categories.map(c => `<option value="${c.category_id}">${esc(c.category_name)} (${esc(c.category_code)})</option>`).join("");
       }
+      if (deptSelect) {
+        deptSelect.innerHTML = '<option value="">Select department...</option>' +
+          departments.map(d => `<option value="${d.dept_id}">${esc(d.dept_name)} (${esc(d.dept_code)})</option>`).join("");
+      }
     } catch (err) {
       console.warn("Failed to load reference data:", err);
+    }
+  }
+
+  function filterStatusOptions() {
+    if (!statusSelect || !currentStatusId) return;
+    const user = window.currentUser;
+    const userRole = user?.role || "STUDENT";
+
+    // Admin and Staff can transition to ANY status (bypass state machine)
+    if (userRole === "ADMIN" || userRole === "STAFF") {
+        Array.from(statusSelect.options).forEach(opt => {
+            if (!opt.value) return; // keep "Select status..."
+            opt.style.display = "";
+        });
+        if (statusHint) {
+            statusHint.textContent = `${userRole}: all statuses available`;
+        }
+        return;
+    }
+
+    // Find valid transitions from current status for user's role
+    const allowed = validTransitions.filter(t => 
+      t.from_status_id === currentStatusId && 
+      (t.required_role === userRole || t.required_role === "ADMIN")
+    );
+
+    const allowedToIds = new Set(allowed.map(t => t.to_status_id));
+
+    // Hide/show options based on valid transitions
+    Array.from(statusSelect.options).forEach(opt => {
+      if (!opt.value) return; // keep "Select status..."
+      const show = allowedToIds.has(parseInt(opt.value));
+      opt.style.display = show ? "" : "none";
+      if (!show && opt.selected) {
+        statusSelect.value = "";
+      }
+    });
+
+    // Update hint
+    if (statusHint) {
+      if (allowed.length === 0) {
+        statusHint.textContent = "No valid transitions from current status";
+      } else {
+        statusHint.textContent = `Valid: ${allowed.map(t => {
+          const opt = statusSelect.querySelector(`option[value="${t.to_status_id}"]`);
+          return opt ? opt.textContent : t.to_status_id;
+        }).join(", ")}`;
+      }
+    }
+  }
+
+  function updateStatusRemark() {
+    if (!statusSelect || !statusRemarkRow || !statusRemarkHint) return;
+    const user = window.currentUser;
+    const userRole = user?.role || "STUDENT";
+    const selectedId = parseInt(statusSelect.value);
+    if (!selectedId || !currentStatusId) {
+      statusRemarkRow.style.display = "none";
+      return;
+    }
+
+    // Admin and Staff: remark required for terminal statuses
+    if (userRole === "ADMIN" || userRole === "STAFF") {
+      const targetStatus = statusSelect.querySelector(`option[value="${selectedId}"]`);
+      const targetCode = targetStatus ? targetStatus.textContent.match(/\(([^)]+)\)/)?.[1] : "";
+      const terminalCodes = ["RESOLVED", "CLOSED", "REJECTED"];
+      const needsRemark = terminalCodes.some(code => targetCode?.includes(code));
+      if (needsRemark) {
+        statusRemarkRow.style.display = "block";
+        statusRemarkHint.textContent = "Remark is required for this transition";
+        statusRemarkInput.required = true;
+      } else {
+        statusRemarkRow.style.display = "none";
+        statusRemarkInput.required = false;
+      }
+      return;
+    }
+
+    // Student: check transition from validTransitions
+    const transition = validTransitions.find(t => 
+      t.from_status_id === currentStatusId && t.to_status_id === selectedId
+    );
+    if (transition && transition.requires_remark) {
+      statusRemarkRow.style.display = "block";
+      statusRemarkHint.textContent = "Remark is required for this transition";
+      statusRemarkInput.required = true;
+    } else {
+      statusRemarkRow.style.display = "none";
+      statusRemarkInput.required = false;
     }
   }
 
@@ -309,26 +414,39 @@ if (detailBox) {
     const canChangeStatus = statusSelect && statusSelect.value && statusSelect.value != currentStatusId;
     const canChangePriority = prioritySelect && prioritySelect.value && prioritySelect.value != currentPriorityId;
     const canChangeCategory = categorySelect && categorySelect.value && categorySelect.value != currentCategoryId;
-    if (actionButtons) actionButtons.style.display = (canChangeStatus || canChangePriority || canChangeCategory) ? "flex" : "none";
+    const canChangeDept = deptSelect && deptSelect.value && deptSelect.value != currentDeptId;
+    if (actionButtons) actionButtons.style.display = (canChangeStatus || canChangePriority || canChangeCategory || canChangeDept) ? "flex" : "none";
     if (saveStatusBtn) saveStatusBtn.disabled = !canChangeStatus;
     if (savePriorityBtn) savePriorityBtn.disabled = !canChangePriority;
     if (saveCategoryBtn) saveCategoryBtn.disabled = !canChangeCategory;
+    if (saveDeptBtn) saveDeptBtn.disabled = !canChangeDept;
   }
 
-  if (statusSelect) statusSelect.addEventListener("change", updateActionButtons);
+  if (statusSelect) {
+    statusSelect.addEventListener("change", () => {
+      updateActionButtons();
+      filterStatusOptions();
+      updateStatusRemark();
+    });
+  }
   if (prioritySelect) prioritySelect.addEventListener("change", updateActionButtons);
   if (categorySelect) categorySelect.addEventListener("change", updateActionButtons);
+  if (deptSelect) deptSelect.addEventListener("change", updateActionButtons);
 
   if (saveStatusBtn) {
     saveStatusBtn.addEventListener("click", async () => {
       if (!statusSelect.value || statusSelect.value == currentStatusId) return;
+      const remark = statusRemarkInput?.value?.trim() || "";
       try {
         await apiFetch(`/complaints/${id}/status`, {
           method: "POST",
-          body: JSON.stringify({ status_id: parseInt(statusSelect.value), remark: "" }),
+          body: JSON.stringify({ status_id: parseInt(statusSelect.value), remark }),
         });
         currentStatusId = parseInt(statusSelect.value);
+        statusRemarkInput.value = "";
         updateActionButtons();
+        filterStatusOptions();
+        updateStatusRemark();
         loadAttachments(); // refresh timeline
       } catch (err) {
         alert(err.message);
@@ -362,6 +480,23 @@ if (detailBox) {
           body: JSON.stringify({ category_id: parseInt(categorySelect.value), remark: "" }),
         });
         currentCategoryId = parseInt(categorySelect.value);
+        updateActionButtons();
+        loadAttachments(); // refresh timeline
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
+
+  if (saveDeptBtn) {
+    saveDeptBtn.addEventListener("click", async () => {
+      if (!deptSelect.value || deptSelect.value == currentDeptId) return;
+      try {
+        await apiFetch(`/complaints/${id}/department`, {
+          method: "POST",
+          body: JSON.stringify({ dept_id: parseInt(deptSelect.value), remark: "" }),
+        });
+        currentDeptId = parseInt(deptSelect.value);
         updateActionButtons();
         loadAttachments(); // refresh timeline
       } catch (err) {
@@ -414,6 +549,12 @@ if (detailBox) {
         if (statusHint) statusHint.textContent = "Select a new status and click Save Status";
         if (priorityHint) priorityHint.textContent = "Select a new priority and click Save Priority";
         if (categoryHint) categoryHint.textContent = "Select a new category and click Save Category";
+        if (user.role === "ADMIN") {
+          if (deptSelect) deptSelect.disabled = false;
+          if (deptHint) deptHint.textContent = "Select a new department and click Save Department";
+        } else if (deptHint) {
+          deptHint.textContent = "Only administrators can change department";
+        }
       } else if (statusHint) {
         statusHint.textContent = "Only staff and administrators can change status";
       } else if (priorityHint) {
@@ -428,7 +569,11 @@ if (detailBox) {
       if (statusSelect) statusSelect.value = c.status_id || "";
       if (prioritySelect) prioritySelect.value = c.priority_id || "";
       if (categorySelect) categorySelect.value = c.category_id || "";
+      if (deptSelect) deptSelect.value = c.dept_id || "";
+      currentDeptId = c.dept_id;
       updateActionButtons();
+      filterStatusOptions();
+      updateStatusRemark();
     } catch (err) {
       detailBox.innerHTML = `<div class="alert alert-danger">${esc(err.message)}</div>`;
     }
@@ -688,34 +833,56 @@ if (detailBox) {
 
   loadAttachments();
 
-  (async () => {
+  // Render timeline events
+  function renderTimeline(events) {
     const box = document.getElementById("timeline");
-    try {
-      const t = await apiFetch(`/complaints/${id}/timeline`);
-      const events = t.events || [];
-      const counter = document.getElementById("event-count");
-      if (counter) counter.textContent = `${events.length} event${events.length === 1 ? "" : "s"}`;
+    const counter = document.getElementById("event-count");
+    if (counter) counter.textContent = `${events.length} event${events.length === 1 ? "" : "s"}`;
 
-      if (!events.length) {
-        box.innerHTML = '<p class="text-secondary mb-0">No activity recorded yet.</p>';
-        return;
-      }
-      box.innerHTML = events
-        .map(
-          (ev) => `<div class="timeline-item pb-2 mb-2">
+    if (!events.length) {
+      box.innerHTML = '<p class="text-secondary mb-0">No activity recorded yet.</p>';
+      return;
+    }
+    box.innerHTML = events
+      .map(
+        (ev) => {
+          let payloadHtml = "";
+          const p = ev.payload || {};
+          if (ev.event_type === "COMMENT_ADDED" && p.body) {
+            payloadHtml = `— ${esc(p.body)}`;
+          } else if (ev.event_type === "ATTACHMENT_ADDED" && p.file_name) {
+            payloadHtml = `— ${esc(p.file_name)}`;
+          } else if (ev.event_type === "STATUS_CHANGED") {
+            payloadHtml = `— ${esc(p.from_status_code || "")} → ${esc(p.to_status_code || "")}${p.remark ? ` (${esc(p.remark)})` : ""}`;
+          } else if (ev.event_type === "PRIORITY_CHANGED") {
+            payloadHtml = `— Priority changed${p.remark ? ` (${esc(p.remark)})` : ""}`;
+          } else if (ev.event_type === "CATEGORY_CHANGED") {
+            payloadHtml = `— Category changed${p.remark ? ` (${esc(p.remark)})` : ""}`;
+          } else if (ev.event_type === "DEPARTMENT_CHANGED") {
+            payloadHtml = `— Department changed${p.remark ? ` (${esc(p.remark)})` : ""}`;
+          } else if (ev.event_type === "ASSIGNED") {
+            payloadHtml = `— Assigned to staff${p.remark ? ` (${esc(p.remark)})` : ""}`;
+          } else if (ev.event_type === "RESOLVED" || ev.event_type === "REOPENED" || ev.event_type === "ESCALATED") {
+            payloadHtml = p.remark ? `— ${esc(p.remark)}` : "";
+          }
+          return `<div class="timeline-item pb-2 mb-2">
             <div class="small text-muted">
               ${esc(new Date(ev.occurred_at).toLocaleString())} &middot;
-              ${esc(ev.actor?.username || "")}
+              ${esc(ev.actor?.username || "")} (${esc(ev.actor?.role || "")})
             </div>
-            <div><strong>${esc(ev.event_type)}</strong>
-              ${ev.payload?.body ? `— ${esc(ev.payload.body)}` : ""}
-              ${ev.payload?.file_name ? `— ${esc(ev.payload.file_name)}` : ""}
-            </div>
-          </div>`
-        )
-        .join("");
+            <div><strong>${esc(ev.event_type)}</strong> ${payloadHtml}</div>
+          </div>`;
+        }
+      )
+      .join("");
+  }
+
+  (async () => {
+    try {
+      const t = await apiFetch(`/complaints/${id}/timeline`);
+      renderTimeline(t.events || []);
     } catch (err) {
-      box.innerHTML = `<p class="text-danger mb-0">${esc(err.message)}</p>`;
+      document.getElementById("timeline").innerHTML = `<p class="text-danger mb-0">${esc(err.message)}</p>`;
     }
   })();
 
@@ -730,19 +897,8 @@ if (detailBox) {
         });
         commentForm.reset();
         loadAttachments();
-        const box = document.getElementById("timeline");
         const refreshed = await apiFetch(`/complaints/${id}/timeline`);
-        const events = refreshed.events || [];
-        const counter = document.getElementById("event-count");
-        if (counter) counter.textContent = `${events.length} events`;
-        box.innerHTML = events
-          .map(
-            (ev) => `<div class="timeline-item pb-2 mb-2">
-              <div class="small text-muted">${esc(new Date(ev.occurred_at).toLocaleString())} &middot; ${esc(ev.actor?.username || "")}</div>
-              <div><strong>${esc(ev.event_type)}</strong> ${ev.payload?.body ? `— ${esc(ev.payload.body)}` : ""}</div>
-            </div>`
-          )
-          .join("");
+        renderTimeline(refreshed.events || []);
       } catch (err) {
         alert(err.message);
       }

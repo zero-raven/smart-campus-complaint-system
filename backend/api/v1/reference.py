@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from backend.core.database import get_db
-from backend.models.reference import Category, ComplaintStatus, Department, Priority
+from backend.models.reference import AllowedTransition, Category, ComplaintStatus, Department, Priority
 
 router = APIRouter(prefix="/reference", tags=["reference"])
 
@@ -84,6 +84,23 @@ def list_departments(db: Session = Depends(get_db)):
                 "dept_name": d.dept_name,
             }
             for d in departments
+        ]
+    }
+
+
+@router.get("/transitions")
+def list_transitions(db: Session = Depends(get_db)):
+    """List all valid status transitions with required role and remark requirement."""
+    transitions = db.execute(select(AllowedTransition)).scalars().all()
+    return {
+        "items": [
+            {
+                "from_status_id": t.status_id,
+                "to_status_id": t.next_status_id,
+                "required_role": t.required_role,
+                "requires_remark": t.requires_remark,
+            }
+            for t in transitions
         ]
     }
 

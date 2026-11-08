@@ -28,7 +28,9 @@
       <ul class="navbar-nav me-auto">
         <li class="nav-item"><a class="nav-link{% if active_page == 'complaints' %} active{% endif %}" href="/complaints">Complaints</a></li>
         <li class="nav-item"><a class="nav-link{% if active_page == 'new_complaint' %} active{% endif %}" href="/complaints/new">New</a></li>
+        {% if user.role in ['STAFF', 'ADMIN'] %}
         <li class="nav-item"><a class="nav-link{% if active_page == 'dashboard' %} active{% endif %}" href="/dashboard">Dashboard</a></li>
+        {% endif %}
         {% if user.role == 'ADMIN' %}
         <li class="nav-item"><a class="nav-link{% if active_page == 'admin_rules' %} active{% endif %}" href="/admin/rules">Rules</a></li>
         <li class="nav-item"><a class="nav-link{% if active_page == 'admin_models' %} active{% endif %}" href="/admin/models">Models</a></li>

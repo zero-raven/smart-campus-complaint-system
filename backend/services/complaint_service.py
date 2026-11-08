@@ -474,7 +474,9 @@ def change_status(
     remark: str | None = None,
     mongo_db=None,
 ) -> Complaint:
-    """Transition a complaint, validating against the stored state machine."""
+    """Transition a complaint, validating against the stored state machine.
+    Admin users can bypass the state machine and transition to any status.
+    """
     complaint = get_complaint_or_404(db, complaint_id)
 
     if new_status_id == complaint.status_id:
@@ -484,25 +486,31 @@ def change_status(
     if target is None:
         raise ComplaintError(f"Status {new_status_id} does not exist", 422)
 
-    transition = db.get(AllowedTransition, (complaint.status_id, new_status_id))
-    if transition is None:
-        current = db.get(ComplaintStatus, complaint.status_id)
-        raise ComplaintError(
-            f"Cannot move from '{current.status_code if current else '?'}' "
-            f"to '{target.status_code}'",
-            409,
-        )
+    # Admin can bypass state machine - allow any valid status
+    if actor.role != "ADMIN":
+        transition = db.get(AllowedTransition, (complaint.status_id, new_status_id))
+        if transition is None:
+            current = db.get(ComplaintStatus, complaint.status_id)
+            raise ComplaintError(
+                f"Cannot move from '{current.status_code if current else '?'}' "
+                f"to '{target.status_code}'",
+                409,
+            )
 
-    if transition.required_role != "ADMIN" and actor.role not in (
-        transition.required_role,
-        "ADMIN",
-    ):
-        raise ComplaintError(
-            f"Role '{actor.role}' may not perform this transition", 403
-        )
+        if transition.required_role != "ADMIN" and actor.role not in (
+            transition.required_role,
+            "ADMIN",
+        ):
+            raise ComplaintError(
+                f"Role '{actor.role}' may not perform this transition", 403
+            )
 
-    if transition.requires_remark and not (remark and remark.strip()):
-        raise ComplaintError("A remark is required for this transition", 422)
+        if transition.requires_remark and not (remark and remark.strip()):
+            raise ComplaintError("A remark is required for this transition", 422)
+    else:
+        # Admin: still require remark for terminal/resolution transitions
+        if target.status_code in ("RESOLVED", "CLOSED", "REJECTED") and not (remark and remark.strip()):
+            raise ComplaintError("A remark is required for this transition", 422)
 
     old_status_id = complaint.status_id
     complaint.status_id = new_status_id
@@ -646,6 +654,60 @@ def change_category(
     )
 
     _notify(db, complaint, actor, f"Category changed to {target.category_name}")
+    db.commit()
+    db.refresh(complaint)
+    _publish_inline(mongo_db, complaint_id)
+    return complaint
+
+
+def change_department(
+    db: Session,
+    complaint_id: int,
+    new_dept_id: int,
+    actor: AppUser,
+    remark: str | None = None,
+    mongo_db=None,
+) -> Complaint:
+    """Change the department of a complaint. Only admins can change department."""
+    if actor.role != "ADMIN":
+        raise ComplaintError("Only administrators can change department", 403)
+
+    complaint = get_complaint_or_404(db, complaint_id)
+
+    if new_dept_id == complaint.dept_id:
+        raise ComplaintError("Complaint already in that department", 409)
+
+    target = db.get(Department, new_dept_id)
+    if target is None:
+        raise ComplaintError(f"Department {new_dept_id} does not exist", 422)
+
+    old_dept_id = complaint.dept_id
+    old_dept_name = complaint.department.dept_name if complaint.department else None
+    complaint.dept_id = new_dept_id
+
+    db.add(
+        StatusHistory(
+            complaint_id=complaint_id,
+            old_status_id=complaint.status_id,
+            new_status_id=complaint.status_id,
+            changed_by=actor.user_id,
+            remarks=f"Department changed from {old_dept_id} to {new_dept_id}" + (f": {remark}" if remark else ""),
+        )
+    )
+
+    _enqueue_event(
+        db,
+        complaint,
+        events.EVENT_DEPARTMENT_CHANGED,
+        actor,
+        payload={
+            "from_dept_id": old_dept_id,
+            "to_dept_id": new_dept_id,
+            "remark": remark,
+        },
+    )
+
+    _notify(db, complaint, actor, f"Department changed to {target.dept_name}")
     db.commit()
     db.refresh(complaint)
     _publish_inline(mongo_db, complaint_id)
@@ -1009,10 +1071,13 @@ def delete_complaint(
     db.delete(complaint)
     db.commit()
 
-    # Clean up MongoDB events for this complaint
+    # Clean up MongoDB events for this complaint (best-effort, don't fail if MongoDB is down)
     if mongo_db is not None:
-        events_col = mongo_db.get_collection("complaint_events")
-        events_col.delete_many({"complaint_id": complaint_id})
-        publish_pending_for_complaint(mongo_db, complaint_id)
+        try:
+            events_col = mongo_db.get_collection("complaint_events")
+            events_col.delete_many({"complaint_id": complaint_id})
+            publish_pending_for_complaint(mongo_db, complaint_id)
+        except Exception as exc:  # pragma: no cover - connectivity failure path
+            logger.warning("MongoDB cleanup failed during complaint deletion: %s", exc)
 
     logger.info("Complaint %s deleted by %s", complaint_id, actor.username)

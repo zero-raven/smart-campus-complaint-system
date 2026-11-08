@@ -110,6 +110,11 @@ class CategoryChangeRequest(BaseModel):
     remark: str | None = Field(default=None, max_length=1000)
 
 
+class DepartmentChangeRequest(BaseModel):
+    dept_id: int
+    remark: str | None = Field(default=None, max_length=1000)
+
+
 class ComplaintListResponse(BaseModel):
     items: list[ComplaintResponse]
     total: int

@@ -21,6 +21,7 @@ from backend.schemas.complaint import (
     ComplaintCreateResponse,
     ComplaintListResponse,
     ComplaintResponse,
+    DepartmentChangeRequest,
     PriorityChangeRequest,
     StatusChangeRequest,
 )
@@ -228,6 +229,22 @@ def change_category(
     return svc._to_response(updated, db)
 
 
+@router.post("/{complaint_id}/department", response_model=ComplaintResponse)
+def change_department(
+    complaint_id: int,
+    payload: DepartmentChangeRequest,
+    db: Session = Depends(get_db),
+    user: AppUser = Depends(get_current_user),
+) -> ComplaintResponse:
+    try:
+        updated = svc.change_department(
+            db, complaint_id, payload.dept_id, user, payload.remark, mongo_db=_mongo()
+        )
+    except svc.ComplaintError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return svc._to_response(updated, db)
+
+
 @router.post("/{complaint_id}/comments", status_code=status.HTTP_201_CREATED)
 def add_comment(
     complaint_id: int,
@@ -273,5 +290,10 @@ def delete_complaint(
     """Delete a complaint and all its related data. Admin only."""
     if user.role != "ADMIN":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
-    svc.delete_complaint(db, complaint_id, user, mongo_db=_mongo(), mongo_db_name=_mongo_name())
+    try:
+        svc.delete_complaint(db, complaint_id, user, mongo_db=_mongo(), mongo_db_name=_mongo_name())
+    except svc.ComplaintError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="Failed to delete complaint") from exc
     return Response(status_code=status.HTTP_204_NO_CONTENT)

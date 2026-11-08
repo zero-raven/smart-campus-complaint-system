@@ -167,7 +167,7 @@ def main() -> int:
 
     illegal = client.post(
         f"/api/v1/complaints/{complaint_id}/status",
-        headers=admin,
+        headers=staff,
         json={"status_id": 6},  # CLOSED directly from IN_PROGRESS
     )
     failures += not check(
