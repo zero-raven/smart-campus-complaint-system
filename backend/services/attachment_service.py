@@ -27,6 +27,7 @@ stored and served back, which is the stated requirement.
 
 from __future__ import annotations
 
+import io
 import re
 import unicodedata
 from dataclasses import dataclass
@@ -38,6 +39,7 @@ from bson.errors import InvalidId
 from gridfs import GridFS
 from gridfs.errors import CorruptGridFile, FileExists, GridFSError, NoFile
 from pymongo.errors import PyMongoError
+from PIL import Image, ExifTags
 
 from backend.core.config import get_settings
 from backend.core.logging import get_logger
@@ -195,6 +197,69 @@ def validate_upload(data: bytes, declared_type: str | None, file_name: str | Non
     return safe_name
 
 
+def correct_orientation(data: bytes, content_type: str) -> bytes:
+    """Rotate JPEG/PNG/HEIC images according to their EXIF orientation tag.
+
+    Mobile cameras (especially iPhones) often save photos with an orientation
+    tag instead of physically rotating pixels. Browsers ignore this tag when
+    rendering <img>, so photos appear sideways/upside-down. This function
+    reads the tag, applies the rotation, and strips the tag so the stored
+    bytes display correctly everywhere.
+
+    Non-JPEG/PNG/HEIC formats, images without EXIF, or corrupt EXIF are
+    returned unchanged — we never fail an upload because of orientation.
+    """
+    # Only correct formats that commonly carry EXIF orientation
+    if content_type not in ("image/jpeg", "image/png", "image/heic", "image/heif"):
+        return data
+
+    try:
+        with Image.open(io.BytesIO(data)) as img:
+            # Find the EXIF orientation tag key
+            orientation_key = next(
+                (k for k, v in ExifTags.TAGS.items() if v == "Orientation"), None
+            )
+            if orientation_key is None:
+                return data
+
+            exif = img.getexif()
+            if exif is None:
+                return data
+
+            orientation = exif.get(orientation_key)
+            if orientation is None or orientation == 1:
+                return data  # already correct
+
+            # Map orientation values to transformations
+            # https://exiftool.org/TagNames/EXIF.html#Orientation
+            method = {
+                2: Image.Transpose.FLIP_LEFT_RIGHT,
+                3: Image.Transpose.ROTATE_180,
+                4: Image.Transpose.FLIP_TOP_BOTTOM,
+                5: Image.Transpose.TRANSPOSE,      # flip + rotate 90
+                6: Image.Transpose.ROTATE_270,     # rotate 90 CW
+                7: Image.Transpose.TRANSVERSE,     # flip + rotate 270
+                8: Image.Transpose.ROTATE_90,      # rotate 90 CCW
+            }.get(orientation)
+
+            if method is None:
+                return data
+
+            corrected = img.transpose(method)
+
+            # Save back to bytes, preserving format
+            output = io.BytesIO()
+            fmt = "JPEG" if content_type == "image/jpeg" else "PNG"
+            if content_type in ("image/heic", "image/heif"):
+                # Pillow can't write HEIC; fall back to JPEG for corrected version
+                fmt = "JPEG"
+            corrected.save(output, format=fmt, quality=90, exif=b"")  # strip EXIF
+            return output.getvalue()
+    except Exception:
+        # Any error (corrupt EXIF, unsupported format, etc.) -> return original
+        return data
+
+
 # ---------------------------------------------------------------------------
 # Storage
 # ---------------------------------------------------------------------------
@@ -217,6 +282,11 @@ def store_image(
     """
     safe_name = validate_upload(data, declared_type, file_name)
     content_type = sniff_content_type(data, declared_type)
+
+    # Correct EXIF orientation so mobile photos display correctly in browsers
+    # content_type is guaranteed non-None here because validate_upload would have
+    # raised if sniff_content_type returned None.
+    data = correct_orientation(data, content_type or "image/jpeg")
 
     try:
         fs = get_gridfs(db_name)

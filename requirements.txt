@@ -21,6 +21,9 @@ psycopg2-binary>=2.9.9
 # --- Document store (MongoDB) ---
 pymongo>=4.8
 
+# --- Image processing ---
+Pillow>=10.2
+
 # --- Auth ---
 # NOTE: passlib is deliberately NOT used. passlib 1.7.4 reads
 # bcrypt.__about__.__version__, which bcrypt >= 5.0 removed, and it also
